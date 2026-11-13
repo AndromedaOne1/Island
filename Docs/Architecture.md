@@ -1,8 +1,8 @@
-# Core shell architecture
+# Island architecture
 
 Status: Swift package to `Island.app` and the `IslandModule` contract confirmed.
-Step 1 is implemented; physical-notch and Space/fullscreen behavior await
-hardware validation before feature modules are added.
+Step 1 (core shell) is accepted. Step 2 (Now Playing) is implemented, with an
+isolated automatic source and consent-aware Music/Spotify backups.
 
 ## Targets and directories
 
@@ -15,16 +15,21 @@ Sources/
     Panel/             Nonactivating NSPanel and pointer tracking
     Modules/           IslandModule protocol and priority registry
     Settings/          Persistent shell preferences
+    NowPlaying/        Playback model, source coordination, processes, and views
   IslandApp/
     App/               App delegate, menu bar item, and settings window
     Views/             Shell content and settings interface
 Tests/
-  IslandCoreTests/     Geometry, interaction, and module-selection tests
+  IslandCoreTests/     Geometry, interaction, modules, and playback tests
 Resources/
   Info.plist           App bundle metadata; macOS 14 minimum
+  MediaRemote/         Island-owned helper parent-lifetime watchdog
+ThirdParty/            Pinned adapter sources and retained license notices
 Scripts/
   build-app.sh         Build, bundle, and ad-hoc sign Island.app
+  build-mediaremote.sh Build the isolated adapter framework from source
   run.sh               Build and launch the app bundle
+  test.sh              Run Swift Testing with installed toolchain resources
 ```
 
 Two local targets keep AppKit integration and the presentation model available
@@ -62,8 +67,34 @@ the compact and expanded content. Equal priorities use stable identifier order.
 Only the module boundary erases view types; each module can use concrete SwiftUI
 views internally. Compact views occupy separate wings outside the notch.
 
-The first milestone registers no live modules. An empty expanded view offers
-shell controls, and a menu command can temporarily preview the compact layout.
+The app registers `NowPlayingModule` at priority 100. A playback snapshot or a
+pending backup consent notice activates it. Idle media leaves the shell collapsed;
+paused media remains active. An empty expanded view offers shell controls, and a
+menu command can preview the compact layout without a live module.
+
+## Now Playing boundary
+
+`NowPlayingSource` delivers Sendable playback values and source events to the
+main actor. `NowPlayingCoordinator` owns source selection, permissions, commands,
+and generation guards. An automatic source failure clears stale media and starts
+the configured backup; idle data does not cause failover.
+
+`MediaRemoteSource` launches a bundled Perl adapter as a separate process; Island
+never loads the private framework itself. A bounded stream preserves output
+ordering, and a serial background actor frames JSON and decodes artwork bytes.
+Process I/O, deadlines, termination, and descriptor cleanup run on a dedicated
+queue. Playback command helpers are short-lived and cancellable.
+
+`AppleEventsSource` checks only running enabled Music/Spotify processes. It queries
+permission without a prompt; an explicit Allow action requests consent. Scripts
+and descriptors stay on a serial background actor. Network artwork and ImageIO
+thumbnail decoding stay off the main actor and reject oversized images.
+
+`PlaybackSnapshot` extrapolates position from the source position, timestamp, and
+playback rate; pause freezes it and unknown duration has no invented percentage.
+Source callbacks, command results, and artwork deliveries are guarded against
+stale lifetimes and tracks. See [NowPlaying.md](NowPlaying.md) for the pinned
+revision, verified behavior, licensing, and failure limitations.
 
 ## Panel and interaction
 
@@ -106,11 +137,13 @@ invalidates pointer tracking, and stops enabled modules.
 ## Settings and scope
 
 Store overlay visibility, display selection, and hover delay in `UserDefaults`.
-Expose module toggles through the registry when modules are added. Launch at login
+Persist Now Playing enablement, source preference, and individual backup toggles.
+Expose module enablement through the registry. Launch at login
 uses public `SMAppService.mainApp` and changes only when its toggle is used.
 
-No private APIs are needed for the core shell. Now Playing research and a separate
-decision about supported providers must precede its implementation. Timer,
+No private APIs are needed for the core shell. The accepted Now Playing source
+decision uses private MediaRemote inside its helper and public Apple Events as
+the Music/Spotify backup. Timer,
 Calendar, Battery, HUD, shelf, and device-use features remain later milestones.
 
 ## Validation
