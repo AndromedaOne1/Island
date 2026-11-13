@@ -56,42 +56,42 @@ public struct IslandLayout: Equatable, Sendable {
         self.screen = screen
         mode = screen.hasNotch ? .notch : .pill
         let frame = screen.frame
-        let depth = screen.hasNotch ? min(screen.safeAreaTop, 120) : 32
+        let depth = screen.hasNotch ? min(screen.safeAreaTop, IslandDesign.Layout.maximumNotchDepth) : IslandDesign.Layout.pillHeight
         let left = screen.auxiliaryLeft
         let right = screen.auxiliaryRight
         let validAreas = screen.hasNotch
             && !left.isEmpty && !right.isEmpty
-            && frame.insetBy(dx: -1, dy: -1).contains(left)
-            && frame.insetBy(dx: -1, dy: -1).contains(right)
-            && abs(left.maxY - frame.maxY) <= 1
-            && abs(right.maxY - frame.maxY) <= 1
-            && abs(left.minY - (frame.maxY - depth)) <= 1
-            && abs(right.minY - (frame.maxY - depth)) <= 1
-            && right.minX - left.maxX >= 40
-            && right.minX - left.maxX <= min(600, frame.width / 2)
+            && frame.insetBy(dx: -IslandDesign.Layout.screenTolerance, dy: -IslandDesign.Layout.screenTolerance).contains(left)
+            && frame.insetBy(dx: -IslandDesign.Layout.screenTolerance, dy: -IslandDesign.Layout.screenTolerance).contains(right)
+            && abs(left.maxY - frame.maxY) <= IslandDesign.Layout.screenTolerance
+            && abs(right.maxY - frame.maxY) <= IslandDesign.Layout.screenTolerance
+            && abs(left.minY - (frame.maxY - depth)) <= IslandDesign.Layout.screenTolerance
+            && abs(right.minY - (frame.maxY - depth)) <= IslandDesign.Layout.screenTolerance
+            && right.minX - left.maxX >= IslandDesign.Layout.minimumNotchWidth
+            && right.minX - left.maxX <= min(IslandDesign.Layout.maximumNotchWidth, frame.width / 2)
 
         // Safe-area data still identifies a notch when auxiliary rectangles are
         // unavailable (for example during a display-mode transition).
-        let width = validAreas ? right.minX - left.maxX : min(200, frame.width / 4)
+        let width = validAreas ? right.minX - left.maxX : min(IslandDesign.Layout.estimatedNotchWidth, frame.width / 4)
         usesEstimatedNotchWidth = screen.hasNotch && !validAreas
         centerX = validAreas ? (left.maxX + right.minX) / 2 : frame.midX
-        topY = frame.maxY - (screen.hasNotch ? 0 : 8)
+        topY = frame.maxY - (screen.hasNotch ? 0 : IslandDesign.Layout.pillTopOffset)
         notchRect = screen.hasNotch
             ? CGRect(x: centerX - width / 2, y: frame.maxY - depth, width: width, height: depth)
             : nil
 
-        let availableWidth = max(80, 2 * min(centerX - frame.minX, frame.maxX - centerX) - 24)
-        let baseWidth = screen.hasNotch ? width + 12 : 168
-        let baseHeight = depth + (screen.hasNotch ? 4 : 0)
+        let availableWidth = max(IslandDesign.Layout.minimumAvailableWidth, 2 * min(centerX - frame.minX, frame.maxX - centerX) - IslandDesign.Spacing.content)
+        let baseWidth = screen.hasNotch ? width + IslandDesign.Layout.notchWidthPadding : IslandDesign.Layout.pillWidth
+        let baseHeight = depth + (screen.hasNotch ? IslandDesign.Layout.notchBottomOverlap : 0)
         collapsed = SurfaceMetrics(width: min(baseWidth, availableWidth), height: baseHeight,
-                                   topRadius: screen.hasNotch ? 6 : 16,
-                                   bottomRadius: screen.hasNotch ? 10 : 16)
-        compact = SurfaceMetrics(width: min(baseWidth + 160, availableWidth), height: baseHeight + 4,
-                                 topRadius: screen.hasNotch ? 8 : 18, bottomRadius: 18)
-        expanded = SurfaceMetrics(width: min(460, availableWidth), height: min(depth + 248, frame.height - 24),
-                                  topRadius: screen.hasNotch ? 12 : 22, bottomRadius: 28)
-        let canvasWidth = expanded.width + 40
-        let canvasHeight = expanded.height + 32
+                                   topRadius: screen.hasNotch ? IslandDesign.Layout.collapsedTopRadius : IslandDesign.Layout.pillCollapsedRadius,
+                                   bottomRadius: screen.hasNotch ? IslandDesign.Layout.collapsedBottomRadius : IslandDesign.Layout.pillCollapsedRadius)
+        compact = SurfaceMetrics(width: min(baseWidth + IslandDesign.Layout.compactExtraWidth, availableWidth), height: baseHeight + IslandDesign.Layout.compactExtraHeight,
+                                 topRadius: screen.hasNotch ? IslandDesign.Layout.compactTopRadius : IslandDesign.Layout.pillCompactRadius, bottomRadius: IslandDesign.Layout.compactBottomRadius)
+        expanded = SurfaceMetrics(width: min(IslandDesign.Layout.expandedWidth, availableWidth), height: min(depth + IslandDesign.Layout.expandedBodyHeight, frame.height - IslandDesign.Spacing.content),
+                                  topRadius: screen.hasNotch ? IslandDesign.Layout.expandedTopRadius : IslandDesign.Layout.pillExpandedRadius, bottomRadius: IslandDesign.Layout.expandedBottomRadius)
+        let canvasWidth = max(expanded.width, compact.width) + IslandDesign.Layout.canvasHorizontalMargin
+        let canvasHeight = expanded.height + IslandDesign.Layout.canvasVerticalMargin
         panelFrame = CGRect(x: centerX - canvasWidth / 2, y: topY - canvasHeight,
                             width: canvasWidth, height: canvasHeight)
     }

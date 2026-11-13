@@ -18,7 +18,7 @@ public final class ShellSettings: ObservableObject {
         self.defaults = defaults
         isVisible = defaults.object(forKey: "island.overlayVisible") as? Bool ?? true
         selectedDisplayID = defaults.string(forKey: "island.selectedDisplayID") ?? ""
-        let delay = defaults.object(forKey: "island.hoverDelay") as? Double ?? 0.25
-        hoverDelay = delay.isFinite ? min(1.5, max(0.05, delay)) : 0.25
+        let delay = defaults.object(forKey: "island.hoverDelay") as? Double ?? IslandDesign.Motion.hoverDelay
+        hoverDelay = delay.isFinite ? min(IslandDesign.Motion.maximumHoverDelay, max(IslandDesign.Motion.minimumHoverDelay, delay)) : IslandDesign.Motion.hoverDelay
     }
 }

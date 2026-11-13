@@ -105,7 +105,7 @@ public final class IslandPanelController: NSObject, ObservableObject {
         if pointerTimer == nil {
             // A low-frequency position check also works when the menu run loop
             // consumes mouse moves, or the transparent panel ignores events.
-            let timer = Timer(timeInterval: 1.0 / 30.0, target: self,
+            let timer = Timer(timeInterval: IslandDesign.Motion.frameInterval, target: self,
                               selector: #selector(pointerTick(_:)), userInfo: nil, repeats: true)
             RunLoop.main.add(timer, forMode: .common)
             pointerTimer = timer

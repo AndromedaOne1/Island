@@ -24,9 +24,9 @@ struct SettingsView: View {
                 }
                 HStack {
                     Text("Hover delay")
-                    Slider(value: $settings.hoverDelay, in: 0.05...1.5, step: 0.05)
+                    Slider(value: $settings.hoverDelay, in: IslandDesign.Motion.minimumHoverDelay...IslandDesign.Motion.maximumHoverDelay, step: IslandDesign.Motion.hoverDelayStep)
                     Text(settings.hoverDelay, format: .number.precision(.fractionLength(2)))
-                        .monospacedDigit().frame(width: 40)
+                        .monospacedDigit().frame(width: IslandDesign.Settings.delayLabelWidth)
                     Text("s")
                 }
             }
@@ -36,10 +36,10 @@ struct SettingsView: View {
                 Toggle("Allow Music backup", isOn: $playbackPreferences.musicBackupEnabled)
                 Toggle("Allow Spotify backup", isOn: $playbackPreferences.spotifyBackupEnabled)
                 Text("The backup reads track information and controls playback. macOS asks for Automation access only when you allow a running player below.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(IslandDesign.Typography.Role.caption.font).foregroundStyle(.secondary)
                 Text(playback.source == .automatic ? "Source: Automatic" : playback.source == .backup ? "Source: Music / Spotify" : "Now Playing is off")
-                    .font(.caption).foregroundStyle(.secondary)
-                if let message = playback.statusMessage { Text(message).font(.caption).foregroundStyle(.secondary) }
+                    .font(IslandDesign.Typography.Role.caption.font).foregroundStyle(.secondary)
+                if let message = playback.statusMessage { Text(message).font(IslandDesign.Typography.Role.caption.font).foregroundStyle(.secondary) }
                 ForEach(playback.pendingPermissions) { player in
                     Button("Allow \(player.name) Control…") { playback.authorize(player) }
                 }
@@ -57,15 +57,15 @@ struct SettingsView: View {
             Section("Startup") {
                 Toggle("Launch at login", isOn: Binding(get: { loginItem.isEnabled }, set: loginItem.setEnabled))
                 if let message = loginItem.message {
-                    Text(message).font(.caption).foregroundStyle(.secondary)
+                    Text(message).font(IslandDesign.Typography.Role.caption.font).foregroundStyle(.secondary)
                 }
             }
             Section {
                 Text("Hover over the notch to expand. Click to pin; click again or outside to dismiss. Use the menu bar to preview compact wings.")
-                    .font(.callout).foregroundStyle(.secondary)
+                    .font(IslandDesign.Typography.Role.subtitle.font).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
-        .frame(width: 480, height: 560)
+        .frame(width: IslandDesign.Settings.size.width, height: IslandDesign.Settings.size.height)
     }
 }

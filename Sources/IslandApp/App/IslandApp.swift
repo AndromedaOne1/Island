@@ -99,7 +99,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         interaction.dismiss()
         loginItem.refresh()
         if settingsWindow == nil {
-            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 480, height: 560),
+            let window = NSWindow(contentRect: NSRect(origin: .zero, size: IslandDesign.Settings.size),
                                   styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false)
             window.title = "Island Settings"
             window.isReleasedWhenClosed = false

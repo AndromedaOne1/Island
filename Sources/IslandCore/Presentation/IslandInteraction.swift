@@ -9,8 +9,8 @@ public final class IslandInteraction: ObservableObject {
     @Published public private(set) var isPinned = false
     @Published public private(set) var isCompactPreviewEnabled = false
     public private(set) var isHovered = false
-    public var hoverDelay: TimeInterval = 0.25
-    public var collapseDelay: TimeInterval = 0.3
+    public var hoverDelay: TimeInterval = IslandDesign.Motion.hoverDelay
+    public var collapseDelay: TimeInterval = IslandDesign.Motion.collapseDelay
 
     private var hasActiveModule = false
     private var hoverExpanded = false
