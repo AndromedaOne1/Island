@@ -47,6 +47,12 @@ public struct PlaybackSnapshot: Equatable, Sendable {
         guard let duration, let position = position(at: now) else { return nil }
         return min(1, max(0, position / duration))
     }
+
+    func replacingArtwork(_ data: Data?) -> Self {
+        Self(bundleIdentifier: bundleIdentifier, identifier: identifier, title: title, artist: artist,
+             album: album, isPlaying: isPlaying, duration: duration, elapsedTime: elapsedTime,
+             sampledAt: sampledAt, playbackRate: playbackRate, artworkData: data, prohibitsSkip: prohibitsSkip)
+    }
 }
 
 public enum MediaCommand: Sendable {

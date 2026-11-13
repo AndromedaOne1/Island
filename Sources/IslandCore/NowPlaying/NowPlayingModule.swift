@@ -39,19 +39,27 @@ public final class NowPlayingModule: IslandModule {
 
     private func updateArtwork(_ snapshot: PlaybackSnapshot?) {
         let identity = snapshot?.identity
-        if identity != artworkIdentity { artwork = nil; artworkData = nil; artworkIdentity = identity }
+        if identity != artworkIdentity {
+            artworkTask?.cancel(); artworkTask = nil
+            artwork = nil; artworkData = nil; artworkIdentity = identity
+        }
         guard artworkData != snapshot?.artworkData else { return }
         artworkData = snapshot?.artworkData
-        artworkTask?.cancel()
+        artworkTask?.cancel(); artworkTask = nil
         guard let data = snapshot?.artworkData, let identity else { artwork = nil; return }
+        let work = Task.detached(priority: .utility) {
+            guard !Task.isCancelled, let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil as CGImage? }
+            guard let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+                  let width = properties[kCGImagePropertyPixelWidth] as? Double,
+                  let height = properties[kCGImagePropertyPixelHeight] as? Double,
+                  width > 0, height > 0, width * height <= 16_000_000 else { return nil as CGImage? }
+            let options: [CFString: Any] = [kCGImageSourceCreateThumbnailFromImageAlways: true,
+                                           kCGImageSourceThumbnailMaxPixelSize: 256,
+                                           kCGImageSourceShouldCacheImmediately: true]
+            return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+        }
         artworkTask = Task { [weak self] in
-            let decoded = await Task.detached(priority: .utility) {
-                guard !Task.isCancelled, let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil as CGImage? }
-                let options: [CFString: Any] = [kCGImageSourceCreateThumbnailFromImageAlways: true,
-                                               kCGImageSourceThumbnailMaxPixelSize: 256,
-                                               kCGImageSourceShouldCacheImmediately: true]
-                return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
-            }.value
+            let decoded = await withTaskCancellationHandler { await work.value } onCancel: { work.cancel() }
             guard !Task.isCancelled, self?.artworkIdentity == identity, self?.artworkData == data else { return }
             self?.artwork = decoded
             self?.artworkTask = nil

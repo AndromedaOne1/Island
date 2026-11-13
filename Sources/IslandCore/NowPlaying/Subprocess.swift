@@ -30,6 +30,8 @@ final class Subprocess: @unchecked Sendable {
     private var finished = false
     private var started = false
     private var streaming = false
+    private var outputEnded = false
+    private var errorEnded = false
     private var onOutput: (@Sendable (Data) -> Void)?
     private var completion: (@Sendable (Result<SubprocessResult, any Error>) -> Void)?
 
@@ -95,11 +97,17 @@ final class Subprocess: @unchecked Sendable {
     }
 
     private func drain(_ handle: FileHandle, isError: Bool) {
+        guard !(isError ? errorEnded : outputEnded) else { return }
         var bytes = [UInt8](repeating: 0, count: 16 * 1024)
         while true {
             let count = bytes.withUnsafeMutableBytes { Darwin.read(handle.fileDescriptor, $0.baseAddress!, $0.count) }
             guard count > 0 else {
                 if count < 0 && errno == EINTR { continue }
+                if count == 0 {
+                    if isError { errorEnded = true } else { outputEnded = true }
+                    let index = isError ? 1 : 0
+                    if readers.indices.contains(index) { readers[index].cancel() }
+                }
                 return
             }
             let data = Data(bytes.prefix(count))

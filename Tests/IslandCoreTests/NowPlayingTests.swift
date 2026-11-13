@@ -175,3 +175,58 @@ import Testing
     task.cancel()
     await #expect(throws: (any Error).self) { try await task.value }
 }
+
+@Test func streamFramesRemainOrderedAcrossPartialAndMultipleReads() async throws {
+    let parser = SnapshotStreamDecoder()
+    let first = try await parser.consume(Data(#"{"type":"data","diff":false,"payload":{"bundleIdentifier":"test","title":"A","playing":true}}"#.utf8))
+    #expect(first.isEmpty)
+    let rest = try await parser.consume(Data(("\n" + #"{"type":"data","diff":true,"payload":{"title":"B","playing":false}}"# + "\n").utf8))
+    #expect(rest.count == 2)
+    #expect(rest[0]?.title == "A")
+    #expect(rest[1]?.title == "B")
+    #expect(rest[1]?.isPlaying == false)
+}
+
+@Test @MainActor func backupKeepsThePrimaryFailureReasonForDiagnosis() {
+    let (coordinator, primary, backup, _) = coordinatorFixture()
+    coordinator.start()
+    primary.onEvent?(.failure("Helper disconnected"))
+    backup.onEvent?(.notice(nil))
+    #expect(coordinator.statusMessage == "Helper disconnected")
+    #expect(coordinator.primaryFailureMessage == "Helper disconnected")
+    coordinator.stop()
+}
+
+@Test @MainActor func stoppingDuringDeliveryDiscardsRemainingStreamFrames() async throws {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent("IslandStream.\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    let script = directory.appendingPathComponent("stream.pl")
+    try """
+        $| = 1;
+        print <<'JSON';
+        {"bundleIdentifier":"test","title":"A","playing":true}
+        {"bundleIdentifier":"test","title":"B","playing":true}
+        {"bundleIdentifier":"test","title":"C","playing":true}
+        JSON
+        sleep 30;
+        """.write(to: script, atomically: true, encoding: .utf8)
+    let source = MediaRemoteSource(scriptURL: script, frameworkURL: directory)
+    defer {
+        source.onEvent = nil
+        source.stop()
+        try? FileManager.default.removeItem(at: directory)
+    }
+    var delivered = 0
+    source.onEvent = { event in
+        guard case .snapshot = event else { return }
+        delivered += 1
+        source.stop()
+        // A new callback must not receive the old session's buffered frames.
+        source.onEvent = { event in if case .snapshot = event { delivered += 1 } }
+    }
+    source.start()
+    let deadline = Date().addingTimeInterval(3)
+    while delivered == 0 && Date() < deadline { try await Task.sleep(for: .milliseconds(10)) }
+    try await Task.sleep(for: .milliseconds(50))
+    #expect(delivered == 1)
+}

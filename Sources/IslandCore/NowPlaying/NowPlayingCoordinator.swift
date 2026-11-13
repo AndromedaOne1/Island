@@ -8,6 +8,7 @@ public final class NowPlayingCoordinator: ObservableObject {
     @Published public private(set) var source: Source = .stopped
     @Published public private(set) var pendingPermissions: [BackupPlayer] = []
     @Published public private(set) var statusMessage: String?
+    @Published public private(set) var primaryFailureMessage: String?
     @Published public private(set) var commandError: String?
     @Published public private(set) var isCommandInFlight = false
     private let primary: any NowPlayingSource
@@ -92,16 +93,24 @@ public final class NowPlayingCoordinator: ObservableObject {
         snapshot = nil
         pendingPermissions = []
         statusMessage = nil
+        primaryFailureMessage = nil
         commandError = nil
         isCommandInFlight = false
         source = .stopped
     }
 
     private func activateBackup(reason: String?) {
+        generation = UUID()
         primary.onEvent = nil
         primary.stop()
+        commandTask?.cancel(); commandTask = nil
+        authorizationTask?.cancel(); authorizationTask = nil
+        isCommandInFlight = false
+        commandError = nil
+        pendingPermissions = []
         snapshot = nil
         source = .backup
+        primaryFailureMessage = reason
         statusMessage = reason
         guard !preferences.backupPlayers.isEmpty else {
             statusMessage = "Automatic playback is unavailable. Enable a Music or Spotify backup in Settings."; return
@@ -120,7 +129,9 @@ public final class NowPlayingCoordinator: ObservableObject {
                 if expectedSource == .automatic { self.activateBackup(reason: reason) }
                 else { self.snapshot = nil; self.statusMessage = reason; self.backup.stop() }
             case .permissions(let players): if self.pendingPermissions != players { self.pendingPermissions = players }
-            case .notice(let message): if self.statusMessage != message { self.statusMessage = message }
+            case .notice(let message):
+                let next = message ?? self.primaryFailureMessage
+                if self.statusMessage != next { self.statusMessage = next }
             }
         }
     }
