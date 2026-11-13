@@ -18,3 +18,17 @@ Feature modules will follow after the core shell has been tested on hardware.
 The app is built as a Swift package and assembled into `Island.app`.
 See [Docs/Architecture.md](Docs/Architecture.md) for the core structure and the
 confirmed `IslandModule` protocol.
+
+## Build and run
+
+Requires macOS 14+ and a Swift 6 toolchain (Xcode or Command Line Tools).
+No external packages are used.
+
+```sh
+./Scripts/build-app.sh         # Debug bundle: build/Island.app
+./Scripts/build-app.sh release # Optimized bundle at the same path
+./Scripts/run.sh               # Build and launch through Launch Services
+```
+
+The bundle has `LSUIElement=true` and an ad-hoc signature. It runs as a menu bar
+app without a Dock icon. Quit Island before rebuilding a running copy.

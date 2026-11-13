@@ -1,6 +1,6 @@
-# Core shell proposal
+# Core shell architecture
 
-Status: awaiting the project-structure choice before implementation.
+Status: Swift package to `Island.app` and the `IslandModule` contract confirmed.
 
 ## Targets and directories
 
@@ -28,7 +28,7 @@ Scripts/
 Two local targets keep AppKit integration and the presentation model available
 to tests without introducing external dependencies or multiple feature packages.
 
-## Proposed module boundary
+## Module boundary
 
 ```swift
 import Combine
