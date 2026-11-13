@@ -13,22 +13,8 @@ A macOS 14+ menu bar app with an animated black overlay around the camera notch.
 
 Feature modules will follow after the core shell has been tested on hardware.
 
-## Workspace Git history
+## Project structure
 
-This environment prevents writes to the workspace's `.git` path. Git metadata
-is stored at `/private/tmp/island-workspace.git`; working files remain here.
-Run Git commands from this directory with:
-
-```sh
-git --git-dir=/private/tmp/island-workspace.git --work-tree=. status
-git --git-dir=/private/tmp/island-workspace.git --work-tree=. log --oneline
-```
-
-A portable backup of the committed history is also saved as `Island-history.bundle`
-in this directory. To create a conventional checkout from it:
-
-```sh
-git clone Island-history.bundle ../Island-checkout
-```
-
-The bundle is refreshed after each completed working step.
+The app is built as a Swift package and assembled into `Island.app`.
+See [Docs/Architecture.md](Docs/Architecture.md) for the core structure and the
+confirmed `IslandModule` protocol.
