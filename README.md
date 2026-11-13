@@ -75,3 +75,15 @@ Hardware checks after launch:
 
 Launch at login should be tested from a stable installed copy of `Island.app`
 (for example in `/Applications`); this milestone does not install the app.
+
+## Third-party attribution
+
+Now Playing uses [MediaRemote Adapter](https://github.com/ungive/mediaremote-adapter)
+by Jonas van den Berg, Alexander5015, and contributors, licensed under
+[BSD-3-Clause](ThirdParty/MediaRemoteAdapter/LICENSE). Its source revision is
+pinned in [UPSTREAM.md](ThirdParty/MediaRemoteAdapter/UPSTREAM.md).
+The [ejbills Swift wrapper](https://github.com/ejbills/mediaremote-adapter) was
+audited (also BSD-3-Clause); Island uses its own client rather than that wrapper.
+Both licenses permit publishing this repository on GitHub with their notices
+retained. See [Docs/NowPlaying.md](Docs/NowPlaying.md) for the source decision,
+verification, and limitations.
