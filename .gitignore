@@ -5,4 +5,5 @@ build/
 xcuserdata/
 *.xcuserstate
 .cache/
+Island-history.bundle
 

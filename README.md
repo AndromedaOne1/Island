@@ -24,9 +24,11 @@ git --git-dir=/private/tmp/island-workspace.git --work-tree=. status
 git --git-dir=/private/tmp/island-workspace.git --work-tree=. log --oneline
 ```
 
-To preserve the repository in a conventional layout outside this restricted
-workspace, clone the local history before the temporary directory is removed:
+A portable backup of the committed history is also saved as `Island-history.bundle`
+in this directory. To create a conventional checkout from it:
 
 ```sh
-git clone /private/tmp/island-workspace.git ../Island-checkout
+git clone Island-history.bundle ../Island-checkout
 ```
+
+The bundle is refreshed after each completed working step.
