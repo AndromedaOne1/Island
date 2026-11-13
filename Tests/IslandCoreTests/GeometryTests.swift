@@ -81,3 +81,22 @@ func notchUsesGlobalScreenCoordinates(origin: CGPoint) {
     #expect(layout.centerX == 993)
     #expect(layout.panelFrame.midX == 993)
 }
+
+@Test func animatedSilhouetteKeepsTheEntireNotchCovered() {
+    let layout = IslandLayout(screen: notchedScreen())
+    let notch = layout.notchRect!
+    for (start, end) in [(layout.collapsed, layout.compact), (layout.compact, layout.expanded)] {
+        for step in 0...20 {
+            let fraction = CGFloat(step) / 20
+            let metrics = SurfaceMetrics(width: start.width + (end.width - start.width) * fraction,
+                                         height: start.height + (end.height - start.height) * fraction,
+                                         topRadius: start.topRadius + (end.topRadius - start.topRadius) * fraction,
+                                         bottomRadius: start.bottomRadius + (end.bottomRadius - start.bottomRadius) * fraction)
+            for x in [notch.minX + 0.5, notch.midX, notch.maxX - 0.5] {
+                for y in [notch.minY + 0.5, notch.midY, notch.maxY - 0.5] {
+                    #expect(layout.contains(CGPoint(x: x, y: y), metrics: metrics))
+                }
+            }
+        }
+    }
+}

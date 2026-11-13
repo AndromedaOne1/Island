@@ -24,11 +24,12 @@ private struct AnimatedSurface<Content: View>: View, Animatable {
 
     var body: some View {
         let shape = IslandShape(topRadius: metrics.topRadius, bottomRadius: metrics.bottomRadius)
-        shape.fill(.black)
+        shape.fill(IslandDesign.Colors.background)
             .onTapGesture(perform: tap)
             .overlay(alignment: .top) { content() }
-            .frame(width: max(1, metrics.width), height: max(1, metrics.height))
+            .frame(width: max(IslandDesign.Spacing.hairline, metrics.width), height: max(IslandDesign.Spacing.hairline, metrics.height))
             .clipShape(shape)
+            .islandSurfaceFeedback()
             .preference(key: SurfaceMetricsKey.self, value: metrics)
     }
 }
@@ -45,17 +46,23 @@ struct ShellView: View {
             if let layout = panel.layout {
                 AnimatedSurface(metrics: layout.metrics(for: interaction.presentation),
                                 tap: { interaction.togglePin() }) {
-                    surfaceContent(layout)
+                    ZStack(alignment: .top) {
+                        surfaceContent(layout)
+                            .id(interaction.presentation)
+                            .transition(.islandContent(reduceMotion: reduceMotion))
+                    }
+                    .animation(reduceMotion ? .easeOut(duration: IslandDesign.Motion.reducedDuration) : IslandDesign.Motion.content,
+                               value: interaction.presentation)
                 }
                 .frame(width: layout.panelFrame.width, height: layout.panelFrame.height, alignment: .top)
-                .animation(reduceMotion ? .easeOut(duration: 0.15) : .spring(response: 0.42, dampingFraction: 0.8),
+                .animation(IslandDesign.Motion.shell(reduceMotion: reduceMotion),
                            value: interaction.presentation)
                 .onPreferenceChange(SurfaceMetricsKey.self) { metrics in
                     Task { @MainActor in panel.updateSurfaceMetrics(metrics) }
                 }
             }
         }
-        .foregroundStyle(.white)
+        .foregroundStyle(IslandDesign.Colors.primary)
         .preferredColorScheme(.dark)
         .ignoresSafeArea()
     }
@@ -67,47 +74,34 @@ struct ShellView: View {
         case .compact:
             HStack(spacing: 0) {
                 compactWing(.leading)
-                Color.clear.frame(width: (layout.notchRect?.width ?? 76) + 12)
+                Color.clear.frame(width: (layout.notchRect?.width ?? IslandDesign.Layout.pillWingGap) + IslandDesign.Layout.notchWidthPadding)
                 compactWing(.trailing)
             }
-            .frame(height: layout.compact.height)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, IslandDesign.Spacing.regular)
+            .frame(width: layout.compact.width, height: layout.compact.height)
             .allowsHitTesting(false)
         case .expanded:
-            VStack(spacing: 14) {
+            VStack(spacing: IslandDesign.Spacing.small) {
                 if let module = registry.activeModule {
                     module.expandedView()
                 } else {
-                    HStack(spacing: 10) {
-                        Image(systemName: "capsule.fill").font(.system(size: 22))
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("Island").font(.headline)
-                            Text("Core shell").font(.caption).foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Image(systemName: interaction.isPinned ? "pin.fill" : "cursorarrow")
-                            .foregroundStyle(.secondary)
-                    }
-                    .allowsHitTesting(false)
-                    Text(interaction.isPinned ? "Pinned open. Click the island or outside to collapse."
-                         : "Hover to expand. Click the island to keep it open.")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    IslandPlaceholder(symbol: "waveform", title: "Nothing playing",
+                                      subtitle: "Your audio will appear here.")
+                        .frame(height: IslandDesign.Artwork.expandedSize + IslandDesign.Control.primarySize + IslandDesign.Spacing.wide)
                         .allowsHitTesting(false)
                 }
                 HStack {
-                    Button(interaction.isPinned ? "Unpin" : "Pin", systemImage: "pin") { interaction.togglePin() }
+                    Button(interaction.isPinned ? "Unpin" : "Pin", systemImage: interaction.isPinned ? "pin.fill" : "pin") { interaction.togglePin() }
                     Spacer()
                     Button("Settings…", systemImage: "gearshape", action: openSettings)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
+                .buttonStyle(IslandButtonStyle(.quiet, tint: IslandDesign.Colors.secondary))
+                .frame(height: IslandDesign.Control.footerHeight)
             }
-            .padding(.horizontal, 24)
-            .padding(.top, (layout.notchRect?.height ?? 16) + 14)
-            .padding(.bottom, 20)
-            .frame(maxWidth: .infinity, alignment: .top)
+            .padding(.horizontal, IslandDesign.Spacing.content)
+            .padding(.top, (layout.notchRect?.height ?? IslandDesign.Layout.pillContentTop) + IslandDesign.Spacing.medium)
+            .padding(.bottom, IslandDesign.Spacing.medium)
+            .frame(width: layout.expanded.width, alignment: .top)
         }
     }
 
@@ -115,11 +109,11 @@ struct ShellView: View {
         if let module = registry.activeModule {
             module.compactView(for: position).frame(maxWidth: .infinity)
         } else {
-            HStack(spacing: 5) {
+            HStack(spacing: IslandDesign.Spacing.tight) {
                 Image(systemName: position == .leading ? "square.dashed" : "circle.dashed")
                 Text(position == .leading ? "Preview" : "Compact")
             }
-            .font(.system(size: 10, weight: .medium))
+            .font(IslandDesign.Typography.Role.caption.font)
             .frame(maxWidth: .infinity)
         }
     }
