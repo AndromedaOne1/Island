@@ -1,6 +1,8 @@
 # Core shell architecture
 
 Status: Swift package to `Island.app` and the `IslandModule` contract confirmed.
+Step 1 is implemented; physical-notch and Space/fullscreen behavior await
+hardware validation before feature modules are added.
 
 ## Targets and directories
 
@@ -81,6 +83,25 @@ shell controls, and a menu command can temporarily preview the compact layout.
 - A custom `Shape` animates its top and bottom corner radii alongside its size.
 - Opening Settings is an explicit user action and activates the settings window.
   Showing and interacting with the overlay never activates the application.
+
+`ScreenGeometry` snapshots AppKit data into values for geometry tests.
+`IslandLayout` anchors its stable canvas at the screen's top edge, independent
+of `visibleFrame` and the menu bar's autohide state. Valid auxiliary areas define
+the notch gap; when a notched screen temporarily lacks valid areas, a centered
+200-point estimate protects the camera strip. Only screens with no top safe-area
+inset use the detached pill, eight points below the top edge.
+
+`IslandInteraction` cancels pending hover and collapse tasks on dismiss/reset.
+`AnimatedSurface` reports interpolated dimensions and radii to the panel
+controller so pointer routing follows the animation. A 30 Hz pointer-position
+check complements mouse monitors during menu tracking; it stops when hidden.
+Hosting safe-area adjustments and automatic window frame constraining are
+disabled because the panel deliberately occupies the notch strip.
+
+The app delegate retains the panel, status item, and settings window. Overlay
+input uses a panel that cannot become key/main; only opening Settings explicitly
+activates the app. Shutdown cancels transitions, removes observers and monitors,
+invalidates pointer tracking, and stops enabled modules.
 
 ## Settings and scope
 

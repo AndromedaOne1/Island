@@ -10,6 +10,7 @@ let package = Package(
     ],
     targets: [
         .target(name: "IslandCore"),
-        .executableTarget(name: "IslandApp", dependencies: ["IslandCore"])
+        .executableTarget(name: "IslandApp", dependencies: ["IslandCore"]),
+        .testTarget(name: "IslandCoreTests", dependencies: ["IslandCore"])
     ]
 )

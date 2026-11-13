@@ -2,7 +2,7 @@
 
 A macOS 14+ menu bar app with an animated black overlay around the camera notch.
 
-## First milestone
+## Core shell (step 1)
 
 - A transparent, nonactivating panel above the menu bar.
 - Notch geometry from public AppKit screen APIs, with a pill fallback.
@@ -12,6 +12,8 @@ A macOS 14+ menu bar app with an animated black overlay around the camera notch.
 - Menu bar controls and shell settings.
 
 Feature modules will follow after the core shell has been tested on hardware.
+The primary hardware test is a MacBook Air 15-inch M3 with a notch on macOS 27.
+The pill layout remains available for displays without a notch.
 
 ## Project structure
 
@@ -32,3 +34,44 @@ No external packages are used.
 
 The bundle has `LSUIElement=true` and an ad-hoc signature. It runs as a menu bar
 app without a Dock icon. Quit Island before rebuilding a running copy.
+
+## Interaction
+
+- Hover over the notch (including the thin black edge below it) for 0.25 seconds
+  to expand. Leaving collapses it after 0.3 seconds.
+- Click the black surface or **Pin** to keep it expanded. Click again, **Unpin**,
+  or anywhere outside to collapse it.
+- The capsule icon in the menu bar provides visibility, compact preview,
+  Settings, and Quit. Settings persist visibility, display selection, and hover
+  delay. Launch at login changes only when its toggle is used.
+- Automatic display selection prefers a notched screen; a disconnected selected
+  display temporarily falls back to automatic selection.
+
+The expanded shell contains controls until real modules are added. Compact
+preview demonstrates the two wings around the camera; it is temporary.
+
+## Validation
+
+```sh
+CLANG_MODULE_CACHE_PATH="$PWD/.cache/clang" \
+swift test --disable-sandbox --disable-xctest \
+  --cache-path .cache/swiftpm --config-path .swiftpm/configuration \
+  --security-path .swiftpm/security
+```
+
+Tests use Swift Testing and cover screen coordinates, auxiliary-area fallback,
+rounded hit regions, hover cancellation, pinning, preferences, and module
+priority/lifecycle. The bundle script validates metadata and its signature.
+
+Hardware checks after launch:
+
+1. The collapsed shell hugs the physical notch; content stays below the camera.
+2. Hover, leave, pin/unpin, and rapid direction changes animate smoothly.
+3. Transparent panel areas and rounded corners let menu bar clicks through.
+4. Interacting with the shell keeps the current app active; Settings opens a
+   normal active window. There is no Dock icon.
+5. Test another Space, a fullscreen app, wake, and external display changes.
+6. Test Show Island, compact preview, and display selection from Settings.
+
+Launch at login should be tested from a stable installed copy of `Island.app`
+(for example in `/Applications`); this milestone does not install the app.
