@@ -26,5 +26,7 @@
     <true/>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>When the Music/Spotify backup is used, Island needs permission to read the current track and control playback.</string>
 </dict>
 </plist>

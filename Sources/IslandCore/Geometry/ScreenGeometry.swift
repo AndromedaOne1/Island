@@ -88,7 +88,7 @@ public struct IslandLayout: Equatable, Sendable {
                                    bottomRadius: screen.hasNotch ? 10 : 16)
         compact = SurfaceMetrics(width: min(baseWidth + 160, availableWidth), height: baseHeight + 4,
                                  topRadius: screen.hasNotch ? 8 : 18, bottomRadius: 18)
-        expanded = SurfaceMetrics(width: min(460, availableWidth), height: min(depth + 180, frame.height - 24),
+        expanded = SurfaceMetrics(width: min(460, availableWidth), height: min(depth + 224, frame.height - 24),
                                   topRadius: screen.hasNotch ? 12 : 22, bottomRadius: 28)
         let canvasWidth = expanded.width + 40
         let canvasHeight = expanded.height + 32

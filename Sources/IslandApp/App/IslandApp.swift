@@ -23,6 +23,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let interaction = IslandInteraction()
     private let registry = ModuleRegistry()
     private let loginItem = LoginItemController()
+    private let nowPlayingPreferences = NowPlayingPreferences()
+    private lazy var nowPlaying: NowPlayingModule = {
+        let bundle = Bundle.main.bundleURL
+        let primary = MediaRemoteSource(scriptURL: bundle.appendingPathComponent("Contents/Resources/NowPlaying/mediaremote-adapter.pl"),
+                                        frameworkURL: bundle.appendingPathComponent("Contents/Frameworks/MediaRemoteAdapter.framework"))
+        let backup = AppleEventsSource(preferences: nowPlayingPreferences)
+        return NowPlayingModule(coordinator: NowPlayingCoordinator(primary: primary, backup: backup, preferences: nowPlayingPreferences))
+    }()
     private lazy var panel = IslandPanelController(settings: settings, interaction: interaction)
     private var statusItem: NSStatusItem?
     private var settingsWindow: NSWindow?
@@ -35,6 +43,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         installMenuBarItem()
         settings.$isVisible.sink { [weak self] _ in
             Task { @MainActor [weak self] in self?.updateMenu() }
+        }.store(in: &subscriptions)
+        registry.register(nowPlaying, enabled: nowPlayingPreferences.isEnabled)
+        nowPlayingPreferences.$isEnabled.sink { [weak self] enabled in
+            Task { @MainActor [weak self] in self?.registry.setEnabled(enabled, for: "now-playing") }
         }.store(in: &subscriptions)
         interaction.$isCompactPreviewEnabled.sink { [weak self] _ in
             Task { @MainActor [weak self] in self?.updateMenu() }
@@ -87,11 +99,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         interaction.dismiss()
         loginItem.refresh()
         if settingsWindow == nil {
-            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 480, height: 360),
+            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 480, height: 560),
                                   styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false)
             window.title = "Island Settings"
             window.isReleasedWhenClosed = false
-            window.contentView = NSHostingView(rootView: SettingsView(settings: settings, panel: panel, loginItem: loginItem))
+            window.contentView = NSHostingView(rootView: SettingsView(settings: settings, panel: panel, loginItem: loginItem,
+                                                                      playbackPreferences: nowPlayingPreferences,
+                                                                      playback: nowPlaying.coordinator))
             window.center()
             settingsWindow = window
         }

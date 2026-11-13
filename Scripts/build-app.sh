@@ -22,13 +22,19 @@ SWIFT_OPTIONS=(
 )
 swift build "${SWIFT_OPTIONS[@]}" --product Island
 BIN_PATH="$(swift build "${SWIFT_OPTIONS[@]}" --show-bin-path)"
+MEDIAREMOTE_OUTPUT="$("$ROOT/Scripts/build-mediaremote.sh" "$CONFIGURATION")"
 
 STAGING="$(mktemp -d "$ROOT/build/.Island.XXXXXX")"
 trap 'rm -rf "$STAGING"' EXIT
 APP="$STAGING/Island.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+mkdir -p "$APP/Contents/Frameworks" "$APP/Contents/Resources/NowPlaying"
 install -m 755 "$BIN_PATH/Island" "$APP/Contents/MacOS/Island"
 cp "$ROOT/Resources/Info.plist" "$APP/Contents/Info.plist"
+/usr/bin/ditto "$MEDIAREMOTE_OUTPUT/MediaRemoteAdapter.framework" "$APP/Contents/Frameworks/MediaRemoteAdapter.framework"
+cp "$ROOT/ThirdParty/MediaRemoteAdapter/bin/mediaremote-adapter.pl" "$APP/Contents/Resources/NowPlaying/"
+cp "$ROOT/ThirdParty/MediaRemoteAdapter/LICENSE" "$APP/Contents/Resources/NowPlaying/MediaRemoteAdapter-LICENSE.txt"
+cp "$ROOT/ThirdParty/MediaRemoteAdapter/UPSTREAM.md" "$APP/Contents/Resources/NowPlaying/MediaRemoteAdapter-UPSTREAM.md"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 /usr/bin/plutil -lint "$APP/Contents/Info.plist"
 /usr/bin/codesign --force --sign - --timestamp=none "$APP"
