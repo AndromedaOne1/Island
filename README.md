@@ -15,6 +15,15 @@ The core shell is accepted. Now Playing (step 2) is implemented.
 The primary hardware is a MacBook Air 15-inch M3 with a notch on macOS 27.2.1.
 The pill layout remains available for displays without a notch.
 
+## Design foundation
+
+Shared tokens define SF Pro typography, color, spacing, state geometry, and motion.
+The island morphs its size and radii with a spring; content fades, scales, and
+blurs through transitions. Now Playing uses shared controls, rounded artwork,
+a cover-derived accent, and a softly masked marquee. Reduce Motion is supported.
+See [Docs/Design.md](Docs/Design.md) for the tokens, pixel-edge fix, visual checks,
+and manual checklist.
+
 ## Now Playing (step 2)
 
 - Compact artwork and an animated playback indicator on opposite notch wings.

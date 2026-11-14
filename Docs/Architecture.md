@@ -15,6 +15,7 @@ Sources/
     Panel/             Nonactivating NSPanel and pointer tracking
     Modules/           IslandModule protocol and priority registry
     Settings/          Persistent shell preferences
+    Design/            Shared visual tokens, components, and artwork palette
     NowPlaying/        Playback model, source coordination, processes, and views
   IslandApp/
     App/               App delegate, menu bar item, and settings window
@@ -116,11 +117,15 @@ revision, verified behavior, licensing, and failure limitations.
   Showing and interacting with the overlay never activates the application.
 
 `ScreenGeometry` snapshots AppKit data into values for geometry tests.
-`IslandLayout` anchors its stable canvas at the screen's top edge, independent
+`IslandLayout` anchors the visible surface at the screen's top edge, independent
 of `visibleFrame` and the menu bar's autohide state. Valid auxiliary areas define
 the notch gap; when a notched screen temporarily lacks valid areas, a centered
 200-point estimate protects the camera strip. Only screens with no top safe-area
 inset use the detached pill, eight points below the top edge.
+The notched window extends one point above the screen to avoid a translucent
+compositor edge. Content is inset by that same point, and input uses the exact
+overscanned shape path. Design geometry and motion live in `IslandDesign`;
+see [Design.md](Design.md) for the shared components and visual verification.
 
 `IslandInteraction` cancels pending hover and collapse tasks on dismiss/reset.
 `AnimatedSurface` reports interpolated dimensions and radii to the panel
