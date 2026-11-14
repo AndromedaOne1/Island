@@ -7,7 +7,7 @@ A macOS 14+ menu bar app with an animated black overlay around the camera notch.
 - A transparent, nonactivating panel above the menu bar.
 - Notch geometry from public AppKit screen APIs, with a pill fallback.
 - Collapsed, compact, and expanded presentation states.
-- Spring animation, hover, and click interaction.
+- Spring animation and hover expansion.
 - A modular interface for future features.
 - Menu bar controls and shell settings.
 
@@ -61,8 +61,8 @@ app without a Dock icon. Quit Island before rebuilding a running copy.
 
 - Hover over the notch (including the thin black edge below it) for 0.25 seconds
   to expand. Leaving collapses it after 0.3 seconds.
-- Click the black surface or **Pin** to keep it expanded. Click again, **Unpin**,
-  or anywhere outside to collapse it.
+- Expansion follows the pointer only. The island remains expanded while hovered
+  and collapses after leaving, including after using playback controls.
 - The capsule icon in the menu bar provides visibility, compact preview,
   Settings, and Quit. Settings persist visibility, display selection, and hover
   delay. Launch at login changes only when its toggle is used.
@@ -85,7 +85,7 @@ System Settings → Privacy & Security → Automation.
 ```
 
 Tests use Swift Testing and cover screen coordinates, auxiliary-area fallback,
-rounded hit regions, hover cancellation, pinning, preferences, and module
+rounded hit regions, hover cancellation and reentry, preferences, and module
 priority/lifecycle, Now Playing data parsing, progress, source fallback, explicit
 consent, and process timeout/cancellation. The test script locates Swift Testing
 frameworks and macros in the installed toolchain, including Command Line Tools.
@@ -98,7 +98,7 @@ the Music/Spotify/browser manual checklist.
 Hardware checks after launch:
 
 1. The collapsed shell hugs the physical notch; content stays below the camera.
-2. Hover, leave, pin/unpin, and rapid direction changes animate smoothly.
+2. Hover, leave, and rapid direction changes animate smoothly without clicks.
 3. Transparent panel areas and rounded corners let menu bar clicks through.
 4. Interacting with the shell keeps the current app active; Settings opens a
    normal active window. There is no Dock icon.

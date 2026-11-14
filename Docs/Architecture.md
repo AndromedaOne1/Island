@@ -111,7 +111,7 @@ revision, verified behavior, licensing, and failure limitations.
 - A local/global mouse monitor observes pointer motion without keyboard monitoring
   or Accessibility access. A tracking area handles entry and exit over the panel.
 - Hover expands after a configurable delay. Leaving collapses after a short delay.
-  Clicking pins or unpins the expanded island; an outside click dismisses it.
+  Surface clicks never change expansion; playback controls retain their actions.
 - A custom `Shape` animates its top and bottom corner radii alongside its size.
 - Opening Settings is an explicit user action and activates the settings window.
   Showing and interacting with the overlay never activates the application.
@@ -128,6 +128,8 @@ overscanned shape path. Design geometry and motion live in `IslandDesign`;
 see [Design.md](Design.md) for the shared components and visual verification.
 
 `IslandInteraction` cancels pending hover and collapse tasks on dismiss/reset.
+Hover exclusively owns expansion; opening Settings dismisses the overlay until
+the pointer leaves and reenters.
 `AnimatedSurface` reports interpolated dimensions and radii to the panel
 controller so pointer routing follows the animation. A 30 Hz pointer-position
 check complements mouse monitors during menu tracking; it stops when hidden.
@@ -155,7 +157,7 @@ Calendar, Battery, HUD, shelf, and device-use features remain later milestones.
 
 Build the app bundle with the installed Swift toolchain. Test notch/fallback
 geometry on offset and negative-coordinate screens, invalid auxiliary geometry,
-module priority and lifecycle, and hover/click state transitions. Launch the
+module priority and lifecycle, and hover state transitions. Launch the
 bundle and check panel flags, active application, and screen placement. Manual
 hardware testing must cover the physical notch, menu interaction, fullscreen,
 Spaces, external monitor changes, animation, and launch-at-login behavior.

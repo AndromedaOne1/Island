@@ -6,7 +6,6 @@ public enum IslandPresentation: String, Sendable { case collapsed, compact, expa
 @MainActor
 public final class IslandInteraction: ObservableObject {
     @Published public private(set) var presentation: IslandPresentation = .collapsed
-    @Published public private(set) var isPinned = false
     @Published public private(set) var isCompactPreviewEnabled = false
     public private(set) var isHovered = false
     public var hoverDelay: TimeInterval = IslandDesign.Motion.hoverDelay
@@ -24,7 +23,7 @@ public final class IslandInteraction: ObservableObject {
         isHovered = true
         collapseTask?.cancel()
         collapseTask = nil
-        guard !isPinned && !hoverExpanded else { return }
+        guard !hoverExpanded else { return }
         let delay = max(0, hoverDelay)
         hoverTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(delay))
@@ -39,7 +38,6 @@ public final class IslandInteraction: ObservableObject {
         isHovered = false
         hoverTask?.cancel()
         hoverTask = nil
-        guard !isPinned else { return }
         let delay = max(0, collapseDelay)
         collapseTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(delay))
@@ -49,19 +47,8 @@ public final class IslandInteraction: ObservableObject {
         }
     }
 
-    public func togglePin() {
-        if isPinned {
-            dismiss()
-        } else {
-            cancelPendingTransitions()
-            isPinned = true
-            refreshPresentation()
-        }
-    }
-
     public func dismiss() {
         cancelPendingTransitions()
-        isPinned = false
         hoverExpanded = false
         refreshPresentation()
     }
@@ -82,7 +69,7 @@ public final class IslandInteraction: ObservableObject {
     }
 
     private func refreshPresentation() {
-        let next: IslandPresentation = isPinned || hoverExpanded
+        let next: IslandPresentation = hoverExpanded
             ? .expanded : (hasActiveModule || isCompactPreviewEnabled ? .compact : .collapsed)
         if presentation != next { presentation = next }
     }

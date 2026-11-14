@@ -18,48 +18,45 @@ import Testing
     model.pointerEntered()
     try await Task.sleep(for: .milliseconds(60))
     #expect(model.presentation == .expanded)
-    #expect(!model.isPinned)
     model.pointerExited()
     #expect(model.presentation == .expanded)
     try await Task.sleep(for: .milliseconds(60))
     #expect(model.presentation == .collapsed)
 }
 
-@Test @MainActor func pinSurvivesPointerExitAndOutsideClickDismisses() async throws {
+@Test @MainActor func leavingHoverRestoresCompactPreview() async throws {
     let model = IslandInteraction()
+    model.hoverDelay = 0.01
     model.collapseDelay = 0.01
+    model.setCompactPreview(true)
     model.pointerEntered()
-    model.togglePin()
-    model.pointerExited()
     try await Task.sleep(for: .milliseconds(60))
     #expect(model.presentation == .expanded)
-    #expect(model.isPinned)
-    model.dismiss()
-    #expect(model.presentation == .collapsed)
-    #expect(!model.isPinned)
+    model.pointerExited()
+    try await Task.sleep(for: .milliseconds(60))
+    #expect(model.presentation == .compact)
 }
 
-@Test @MainActor func unpinCancelsHoverAndRestoresCompactPreview() async throws {
+@Test @MainActor func dismissCancelsHoverUntilPointerReenters() async throws {
     let model = IslandInteraction()
     model.hoverDelay = 0.01
     model.setCompactPreview(true)
     #expect(model.presentation == .compact)
     model.pointerEntered()
-    model.togglePin()
-    model.togglePin()
+    model.dismiss()
+    model.pointerEntered()
     try await Task.sleep(for: .milliseconds(60))
     #expect(model.presentation == .compact)
-    #expect(!model.isPinned)
+    model.pointerExited()
+    model.pointerEntered()
+    try await Task.sleep(for: .milliseconds(60))
+    #expect(model.presentation == .expanded)
 }
 
 @Test @MainActor func reentryCancelsDelayedCollapse() async throws {
     let model = IslandInteraction()
-    model.collapseDelay = 0.02
-    model.pointerEntered()
-    model.togglePin()
-    model.dismiss()
     model.hoverDelay = 0.01
-    model.pointerExited()
+    model.collapseDelay = 0.02
     model.pointerEntered()
     try await Task.sleep(for: .milliseconds(60))
     model.pointerExited()
@@ -68,7 +65,7 @@ import Testing
     #expect(model.presentation == .expanded)
 }
 
-@Test @MainActor func resetCancelsPendingExpansionAndClearsPin() async throws {
+@Test @MainActor func resetCancelsPendingExpansionAndClearsHover() async throws {
     let model = IslandInteraction()
     model.hoverDelay = 0.01
     model.pointerEntered()
@@ -76,18 +73,26 @@ import Testing
     try await Task.sleep(for: .milliseconds(60))
     #expect(model.presentation == .collapsed)
     #expect(!model.isHovered)
-    model.togglePin()
+    model.pointerEntered()
+    try await Task.sleep(for: .milliseconds(60))
+    #expect(model.presentation == .expanded)
     model.reset()
-    #expect(!model.isPinned)
+    #expect(model.presentation == .collapsed)
+    #expect(!model.isHovered)
 }
 
-@Test @MainActor func activeModuleOwnsRestingCompactState() {
+@Test @MainActor func activeModuleOwnsRestingCompactState() async throws {
     let model = IslandInteraction()
+    model.hoverDelay = 0.01
+    model.collapseDelay = 0.01
     model.setHasActiveModule(true)
     #expect(model.presentation == .compact)
-    model.togglePin()
+    model.pointerEntered()
+    try await Task.sleep(for: .milliseconds(60))
+    #expect(model.presentation == .expanded)
     model.setHasActiveModule(false)
     #expect(model.presentation == .expanded)
-    model.dismiss()
+    model.pointerExited()
+    try await Task.sleep(for: .milliseconds(60))
     #expect(model.presentation == .collapsed)
 }

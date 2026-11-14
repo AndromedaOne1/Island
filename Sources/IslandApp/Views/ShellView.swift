@@ -9,7 +9,6 @@ private struct SurfaceMetricsKey: PreferenceKey {
 private struct AnimatedSurface<Content: View>: View, Animatable {
     nonisolated var metrics: SurfaceMetrics
     let topBleed: CGFloat
-    let tap: () -> Void
     @ViewBuilder let content: () -> Content
 
     nonisolated var animatableData: AnimatablePair<AnimatablePair<CGFloat, CGFloat>, AnimatablePair<CGFloat, CGFloat>> {
@@ -26,7 +25,6 @@ private struct AnimatedSurface<Content: View>: View, Animatable {
     var body: some View {
         let shape = IslandShape(topRadius: metrics.topRadius, bottomRadius: metrics.bottomRadius)
         shape.fill(IslandDesign.Colors.background)
-            .onTapGesture(perform: tap)
             .overlay(alignment: .top) { content().padding(.top, topBleed) }
             .frame(width: max(IslandDesign.Spacing.hairline, metrics.width),
                    height: max(IslandDesign.Spacing.hairline, metrics.height + topBleed))
@@ -47,8 +45,7 @@ struct ShellView: View {
         Group {
             if let layout = panel.layout {
                 AnimatedSurface(metrics: layout.metrics(for: interaction.presentation),
-                                topBleed: layout.mode == .notch ? IslandDesign.Layout.notchTopBleed : 0,
-                                tap: { interaction.togglePin() }) {
+                                topBleed: layout.mode == .notch ? IslandDesign.Layout.notchTopBleed : 0) {
                     ZStack(alignment: .top) {
                         surfaceContent(layout)
                             .id(interaction.presentation)
@@ -100,12 +97,7 @@ struct ShellView: View {
             .frame(width: layout.expanded.width, alignment: .top)
             .overlay(alignment: .top) {
                 HStack(spacing: 0) {
-                    Button { interaction.togglePin() } label: {
-                        Image(systemName: interaction.isPinned ? "pin.fill" : "pin")
-                    }
-                    .help(interaction.isPinned ? "Unpin Island" : "Keep Island open")
-                    .accessibilityLabel(interaction.isPinned ? "Unpin Island" : "Keep Island open")
-                    .frame(maxWidth: .infinity)
+                    Color.clear.frame(maxWidth: .infinity).allowsHitTesting(false)
                     Color.clear
                         .frame(width: (layout.notchRect?.width ?? IslandDesign.Layout.pillWingGap) + IslandDesign.Layout.notchWidthPadding)
                         .allowsHitTesting(false)

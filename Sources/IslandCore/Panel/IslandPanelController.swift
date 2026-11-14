@@ -51,11 +51,11 @@ public final class IslandPanelController: NSObject, ObservableObject {
         let mask: NSEvent.EventTypeMask = [.mouseMoved, .leftMouseDragged, .rightMouseDragged,
                                          .otherMouseDragged, .leftMouseDown, .rightMouseDown, .otherMouseDown]
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: mask) { [weak self] event in
-            MainActor.assumeIsolated { self?.handle(event) }
+            MainActor.assumeIsolated { self?.updatePointer() }
             return event
         }
-        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: mask) { [weak self] event in
-            MainActor.assumeIsolated { self?.handle(event) }
+        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: mask) { [weak self] _ in
+            MainActor.assumeIsolated { self?.updatePointer() }
         }
         refreshScreen()
     }
@@ -120,14 +120,5 @@ public final class IslandPanelController: NSObject, ObservableObject {
         let inside = layout.contains(NSEvent.mouseLocation, metrics: metrics)
         panel.ignoresMouseEvents = !inside
         if inside { interaction.pointerEntered() } else { interaction.pointerExited() }
-    }
-
-    private func handle(_ event: NSEvent) {
-        guard settings.isVisible, panel.isVisible, let layout else { return }
-        updatePointer()
-        if [.leftMouseDown, .rightMouseDown, .otherMouseDown].contains(event.type),
-           !layout.contains(NSEvent.mouseLocation, metrics: metrics) {
-            interaction.dismiss()
-        }
     }
 }

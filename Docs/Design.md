@@ -15,8 +15,9 @@ and safety limits remain with their owning models.
 progress bar, transport row, and empty-state component. Interactive controls
 have hover and spring press feedback; read-only content adopts surface feedback.
 The shell keeps its nonactivating behavior and routes input through the same
-shape used for drawing. Pin and Settings live in quiet buttons in the expanded
-wings outside the camera strip.
+shape used for drawing. Settings lives in a quiet button in the expanded right
+wing outside the camera strip. Expansion follows hover, with no pin or surface
+click action.
 
 `ArtworkPalette.swift` provides continuous rounded artwork, shadows, and a small
 weighted color sample. Black/white pixels contribute less to the accent. Sampling
@@ -76,13 +77,17 @@ Coverage includes intermediate morph shapes on 186-, 410-, and 520-point notches
 pill fallback, rounded input regions, and existing playback/lifecycle behavior.
 The bundle script validates metadata and ad-hoc signatures.
 
-Automatic pointer injection is unavailable on this host; no Accessibility prompt
-was requested. Real hover/press, rapid retargeting, native accessibility changes,
-and Pin/Settings input remain in the owner's manual check:
+Native cursor positioning verified both collapsed and compact paths through the
+real shell: hover expanded the surface, moving into its content kept it open,
+and leaving restored the resting state. No clicks or Accessibility prompt were
+needed, and the original cursor position was restored afterward. Button presses,
+rapid retargeting, native accessibility changes, and Settings input remain in
+the owner's manual check:
 
 - Hover and leave repeatedly; watch size, corner radii, and content transitions.
 - Check the physical notch edge for a bright line or gap.
-- Hover/press transport buttons, pin, and settings; check their hit areas.
+- Hover/press transport buttons and settings; check their hit areas.
+- Use transport controls, then leave the island; check that it still collapses.
 - Play/pause and change tracks; watch the cover, accent, title, and progress.
 - Leave a long title open for a full loop; check both faded edges.
 - Enable Reduce Motion in macOS; check static text and indicator behavior.

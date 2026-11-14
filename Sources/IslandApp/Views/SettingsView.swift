@@ -61,7 +61,7 @@ struct SettingsView: View {
                 }
             }
             Section {
-                Text("Hover over the notch to expand. Click to pin; click again or outside to dismiss. Use the menu bar to preview compact wings.")
+                Text("Hover over the notch to expand. Move the pointer away to collapse. Use the menu bar to preview compact wings.")
                     .font(IslandDesign.Typography.Role.subtitle.font).foregroundStyle(IslandDesign.Colors.settingsSecondary)
             }
         }
