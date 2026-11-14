@@ -8,6 +8,7 @@ private struct SurfaceMetricsKey: PreferenceKey {
 
 private struct AnimatedSurface<Content: View>: View, Animatable {
     nonisolated var metrics: SurfaceMetrics
+    let topBleed: CGFloat
     let tap: () -> Void
     @ViewBuilder let content: () -> Content
 
@@ -26,8 +27,9 @@ private struct AnimatedSurface<Content: View>: View, Animatable {
         let shape = IslandShape(topRadius: metrics.topRadius, bottomRadius: metrics.bottomRadius)
         shape.fill(IslandDesign.Colors.background)
             .onTapGesture(perform: tap)
-            .overlay(alignment: .top) { content() }
-            .frame(width: max(IslandDesign.Spacing.hairline, metrics.width), height: max(IslandDesign.Spacing.hairline, metrics.height))
+            .overlay(alignment: .top) { content().padding(.top, topBleed) }
+            .frame(width: max(IslandDesign.Spacing.hairline, metrics.width),
+                   height: max(IslandDesign.Spacing.hairline, metrics.height + topBleed))
             .clipShape(shape)
             .islandSurfaceFeedback()
             .preference(key: SurfaceMetricsKey.self, value: metrics)
@@ -39,12 +41,13 @@ struct ShellView: View {
     @ObservedObject var interaction: IslandInteraction
     @ObservedObject var registry: ModuleRegistry
     let openSettings: () -> Void
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.islandReduceMotion) private var reduceMotion
 
     var body: some View {
         Group {
             if let layout = panel.layout {
                 AnimatedSurface(metrics: layout.metrics(for: interaction.presentation),
+                                topBleed: layout.mode == .notch ? IslandDesign.Layout.notchTopBleed : 0,
                                 tap: { interaction.togglePin() }) {
                     ZStack(alignment: .top) {
                         surfaceContent(layout)
@@ -90,18 +93,30 @@ struct ShellView: View {
                         .frame(height: IslandDesign.Artwork.expandedSize + IslandDesign.Control.primarySize + IslandDesign.Spacing.wide)
                         .allowsHitTesting(false)
                 }
-                HStack {
-                    Button(interaction.isPinned ? "Unpin" : "Pin", systemImage: interaction.isPinned ? "pin.fill" : "pin") { interaction.togglePin() }
-                    Spacer()
-                    Button("Settings…", systemImage: "gearshape", action: openSettings)
-                }
-                .buttonStyle(IslandButtonStyle(.quiet, tint: IslandDesign.Colors.secondary))
-                .frame(height: IslandDesign.Control.footerHeight)
             }
             .padding(.horizontal, IslandDesign.Spacing.content)
             .padding(.top, (layout.notchRect?.height ?? IslandDesign.Layout.pillContentTop) + IslandDesign.Spacing.medium)
             .padding(.bottom, IslandDesign.Spacing.medium)
             .frame(width: layout.expanded.width, alignment: .top)
+            .overlay(alignment: .top) {
+                HStack(spacing: 0) {
+                    Button { interaction.togglePin() } label: {
+                        Image(systemName: interaction.isPinned ? "pin.fill" : "pin")
+                    }
+                    .help(interaction.isPinned ? "Unpin Island" : "Keep Island open")
+                    .accessibilityLabel(interaction.isPinned ? "Unpin Island" : "Keep Island open")
+                    .frame(maxWidth: .infinity)
+                    Color.clear
+                        .frame(width: (layout.notchRect?.width ?? IslandDesign.Layout.pillWingGap) + IslandDesign.Layout.notchWidthPadding)
+                        .allowsHitTesting(false)
+                    Button(action: openSettings) { Image(systemName: "gearshape") }
+                        .help("Island Settings").accessibilityLabel("Island Settings")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(IslandButtonStyle(.quiet, tint: IslandDesign.Colors.tertiary))
+                .padding(.horizontal, IslandDesign.Spacing.regular)
+                .frame(height: layout.notchRect?.height ?? IslandDesign.Layout.pillHeight)
+            }
         }
     }
 

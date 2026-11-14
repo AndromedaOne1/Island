@@ -36,10 +36,10 @@ struct SettingsView: View {
                 Toggle("Allow Music backup", isOn: $playbackPreferences.musicBackupEnabled)
                 Toggle("Allow Spotify backup", isOn: $playbackPreferences.spotifyBackupEnabled)
                 Text("The backup reads track information and controls playback. macOS asks for Automation access only when you allow a running player below.")
-                    .font(IslandDesign.Typography.Role.caption.font).foregroundStyle(.secondary)
+                    .font(IslandDesign.Typography.Role.caption.font).foregroundStyle(IslandDesign.Colors.settingsSecondary)
                 Text(playback.source == .automatic ? "Source: Automatic" : playback.source == .backup ? "Source: Music / Spotify" : "Now Playing is off")
-                    .font(IslandDesign.Typography.Role.caption.font).foregroundStyle(.secondary)
-                if let message = playback.statusMessage { Text(message).font(IslandDesign.Typography.Role.caption.font).foregroundStyle(.secondary) }
+                    .font(IslandDesign.Typography.Role.caption.font).foregroundStyle(IslandDesign.Colors.settingsSecondary)
+                if let message = playback.statusMessage { Text(message).font(IslandDesign.Typography.Role.caption.font).foregroundStyle(IslandDesign.Colors.settingsSecondary) }
                 ForEach(playback.pendingPermissions) { player in
                     Button("Allow \(player.name) Control…") { playback.authorize(player) }
                 }
@@ -57,12 +57,12 @@ struct SettingsView: View {
             Section("Startup") {
                 Toggle("Launch at login", isOn: Binding(get: { loginItem.isEnabled }, set: loginItem.setEnabled))
                 if let message = loginItem.message {
-                    Text(message).font(IslandDesign.Typography.Role.caption.font).foregroundStyle(.secondary)
+                    Text(message).font(IslandDesign.Typography.Role.caption.font).foregroundStyle(IslandDesign.Colors.settingsSecondary)
                 }
             }
             Section {
                 Text("Hover over the notch to expand. Click to pin; click again or outside to dismiss. Use the menu bar to preview compact wings.")
-                    .font(IslandDesign.Typography.Role.subtitle.font).foregroundStyle(.secondary)
+                    .font(IslandDesign.Typography.Role.subtitle.font).foregroundStyle(IslandDesign.Colors.settingsSecondary)
             }
         }
         .formStyle(.grouped)

@@ -48,7 +48,7 @@ public struct IslandArtwork: View {
     let image: CGImage?
     let size: CGFloat
     @Environment(\.islandFeedback) private var feedback
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.islandReduceMotion) private var reduceMotion
     public init(image: CGImage?, size: CGFloat) { self.image = image; self.size = size }
     public var body: some View {
         ZStack {
@@ -68,7 +68,8 @@ public struct IslandArtwork: View {
                 y: size == IslandDesign.Artwork.compactSize ? 0 : IslandDesign.Artwork.shadowOffset)
         .brightness(feedback.isHovered ? IslandDesign.Artwork.hoverBrightness : 0)
         .scaleEffect(feedback.isPressed && !reduceMotion ? IslandDesign.Motion.surfacePressedScale : 1)
-        .animation(IslandDesign.Motion.hover, value: feedback)
+        .animation(IslandDesign.Motion.hover, value: feedback.isHovered)
+        .animation(IslandDesign.Motion.press(reduceMotion: reduceMotion), value: feedback.isPressed)
         .animation(IslandDesign.Motion.content, value: image.map(ObjectIdentifier.init))
         .accessibilityLabel(image == nil ? "No artwork" : "Album artwork")
     }

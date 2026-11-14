@@ -17,7 +17,8 @@ func notchUsesGlobalScreenCoordinates(origin: CGPoint) {
     #expect(!layout.usesEstimatedNotchWidth)
     #expect(layout.notchRect == CGRect(x: origin.x + 663, y: origin.y + 950, width: 186, height: 32))
     #expect(layout.centerX == screen.frame.midX)
-    #expect(layout.panelFrame.maxY == screen.frame.maxY)
+    #expect(layout.panelFrame.maxY == screen.frame.maxY + IslandDesign.Layout.notchTopBleed)
+    #expect(layout.surfaceRect(for: layout.collapsed).maxY == screen.frame.maxY)
     #expect(layout.collapsed.width == 198)
     #expect(layout.collapsed.height == 36)
     #expect(layout.expanded.width > layout.compact.width)
@@ -82,9 +83,17 @@ func notchUsesGlobalScreenCoordinates(origin: CGPoint) {
     #expect(layout.panelFrame.midX == 993)
 }
 
-@Test func animatedSilhouetteKeepsTheEntireNotchCovered() {
-    let layout = IslandLayout(screen: notchedScreen())
+@Test(arguments: [CGFloat(186), CGFloat(410), CGFloat(520)])
+func animatedSilhouetteKeepsTheEntireNotchCovered(notchWidth: CGFloat) {
+    let frame = notchedScreen().frame
+    let leftEdge = frame.midX - notchWidth / 2
+    let rightEdge = frame.midX + notchWidth / 2
+    let screen = ScreenGeometry(id: "design", name: "Design", frame: frame, safeAreaTop: 32,
+                                auxiliaryLeft: CGRect(x: 0, y: frame.maxY - 32, width: leftEdge, height: 32),
+                                auxiliaryRight: CGRect(x: rightEdge, y: frame.maxY - 32, width: frame.maxX - rightEdge, height: 32))
+    let layout = IslandLayout(screen: screen)
     let notch = layout.notchRect!
+    #expect(layout.expanded.width >= layout.compact.width)
     for (start, end) in [(layout.collapsed, layout.compact), (layout.compact, layout.expanded)] {
         for step in 0...20 {
             let fraction = CGFloat(step) / 20

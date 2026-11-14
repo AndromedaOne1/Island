@@ -15,7 +15,16 @@ private struct IslandFeedbackKey: EnvironmentKey {
     static let defaultValue = IslandFeedback()
 }
 
+private struct IslandReduceMotionKey: EnvironmentKey {
+    static let defaultValue: Bool? = nil
+}
+
 public extension EnvironmentValues {
+    /// Native accessibility policy by default; a local override supports design previews.
+    var islandReduceMotion: Bool {
+        get { self[IslandReduceMotionKey.self] ?? accessibilityReduceMotion }
+        set { self[IslandReduceMotionKey.self] = newValue }
+    }
     var islandFeedback: IslandFeedback {
         get { self[IslandFeedbackKey.self] }
         set { self[IslandFeedbackKey.self] = newValue }
@@ -72,7 +81,7 @@ private struct IslandStyledButton: View {
     let kind: IslandButtonStyle.Kind
     let tint: Color
     @Environment(\.isEnabled) private var enabled
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.islandReduceMotion) private var reduceMotion
     @IslandViewState private var hovered = false
     private var background: Color {
         if configuration.isPressed { return IslandDesign.Colors.pressed }
@@ -119,13 +128,21 @@ public struct IslandMarquee: View {
     let text: String
     let role: IslandDesign.Typography.Role
     let color: Color
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.islandReduceMotion) private var reduceMotion
     @Environment(\.islandFeedback) private var feedback
     @IslandViewState private var startedAt = Date()
     public init(_ text: String, role: IslandDesign.Typography.Role, color: Color) {
         self.text = text; self.role = role; self.color = color
     }
     private var label: Text { Text(text).tracking(role == .title ? IslandDesign.Typography.titleTracking : 0) }
+    private var foreground: Color {
+        guard feedback.isHovered else { return color }
+        switch role {
+        case .title: return IslandDesign.Colors.primaryHover
+        case .subtitle: return IslandDesign.Colors.secondaryHover
+        default: return color
+        }
+    }
     public var body: some View {
         GeometryReader { geometry in
             let width = geometry.size.width
@@ -137,9 +154,18 @@ public struct IslandMarquee: View {
             } else {
                 TimelineView(.animation(minimumInterval: IslandDesign.Motion.frameInterval)) { context in
                     let distance = textWidth + IslandDesign.Marquee.gap
-                    let period = IslandDesign.Marquee.holdDuration + distance / IslandDesign.Marquee.speed
+                    let ramp = IslandDesign.Marquee.rampDuration
+                    let travel = distance / IslandDesign.Marquee.speed + ramp
+                    let period = IslandDesign.Marquee.holdDuration + travel
                     let elapsed = max(0, context.date.timeIntervalSince(startedAt)).truncatingRemainder(dividingBy: period)
-                    let offset = min(distance, max(0, elapsed - IslandDesign.Marquee.holdDuration) * IslandDesign.Marquee.speed)
+                    let moving = max(0, elapsed - IslandDesign.Marquee.holdDuration)
+                    let offset: CGFloat = if moving < ramp {
+                        IslandDesign.Marquee.speed * moving * moving / (2 * ramp)
+                    } else if moving > travel - ramp {
+                        distance - IslandDesign.Marquee.speed * (travel - moving) * (travel - moving) / (2 * ramp)
+                    } else {
+                        IslandDesign.Marquee.speed * (moving - ramp / 2)
+                    }
                     HStack(spacing: IslandDesign.Marquee.gap) {
                         label.fixedSize()
                         label.fixedSize().accessibilityHidden(true)
@@ -149,7 +175,7 @@ public struct IslandMarquee: View {
                     .mask {
                         let fade = min(IslandDesign.Marquee.fadeWidth / max(width, 1), 0.5)
                         LinearGradient(stops: [
-                            .init(color: offset > 0 ? .clear : .white, location: 0),
+                            .init(color: .white.opacity(max(0, 1 - min(offset, distance - offset) / IslandDesign.Marquee.fadeWidth)), location: 0),
                             .init(color: .white, location: fade),
                             .init(color: .white, location: 1 - fade),
                             .init(color: .clear, location: 1)
@@ -159,9 +185,11 @@ public struct IslandMarquee: View {
             }
         }
         .frame(height: role.lineHeight)
-        .font(role.font).foregroundStyle(color)
+        .font(role.font).foregroundStyle(foreground)
         .opacity(feedback.isPressed ? IslandDesign.Colors.pressedOpacity : 1)
-        .animation(IslandDesign.Motion.hover, value: feedback)
+        .scaleEffect(feedback.isPressed && !reduceMotion ? IslandDesign.Motion.surfacePressedScale : 1, anchor: .leading)
+        .animation(IslandDesign.Motion.hover, value: feedback.isHovered)
+        .animation(IslandDesign.Motion.press(reduceMotion: reduceMotion), value: feedback.isPressed)
         .onChange(of: text) { startedAt = Date() }
         .onAppear { startedAt = Date() }
         .accessibilityElement(children: .ignore)
@@ -176,7 +204,7 @@ public struct IslandProgressBar: View {
     let tint: Color
     let isPlaying: Bool
     @Environment(\.islandFeedback) private var feedback
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.islandReduceMotion) private var reduceMotion
     public init(value: Double?, position: String, duration: String, tint: Color, isPlaying: Bool) {
         self.value = value; self.position = position; self.duration = duration; self.tint = tint; self.isPlaying = isPlaying
     }
@@ -197,7 +225,9 @@ public struct IslandProgressBar: View {
             }.font(IslandDesign.Typography.time).foregroundStyle(IslandDesign.Colors.secondary)
         }
         .opacity(feedback.isPressed ? IslandDesign.Colors.pressedOpacity : 1)
-        .animation(IslandDesign.Motion.hover, value: feedback)
+        .scaleEffect(feedback.isPressed && !reduceMotion ? IslandDesign.Motion.surfacePressedScale : 1, anchor: .leading)
+        .animation(IslandDesign.Motion.hover, value: feedback.isHovered)
+        .animation(IslandDesign.Motion.press(reduceMotion: reduceMotion), value: feedback.isPressed)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Playback progress")
         .accessibilityValue("\(position) of \(duration)")
@@ -237,7 +267,7 @@ public struct IslandPlaceholder: View {
     let title: String
     let subtitle: String
     @Environment(\.islandFeedback) private var feedback
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.islandReduceMotion) private var reduceMotion
     public init(symbol: String, title: String, subtitle: String) {
         self.symbol = symbol; self.title = title; self.subtitle = subtitle
     }
@@ -254,6 +284,7 @@ public struct IslandPlaceholder: View {
                     .multilineTextAlignment(.center)
             }
         }.frame(maxWidth: .infinity)
-            .animation(IslandDesign.Motion.hover, value: feedback)
+            .animation(IslandDesign.Motion.hover, value: feedback.isHovered)
+            .animation(IslandDesign.Motion.press(reduceMotion: reduceMotion), value: feedback.isPressed)
     }
 }

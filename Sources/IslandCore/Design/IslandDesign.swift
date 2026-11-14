@@ -6,12 +6,15 @@ public enum IslandDesign {
     public enum Colors {
         public static let background = Color.black
         public static let primary = Color.white.opacity(0.96)
+        public static let primaryHover = Color.white
         public static let secondary = Color.white.opacity(0.62)
+        public static let secondaryHover = Color.white.opacity(0.76)
         public static let tertiary = Color.white.opacity(0.38)
         public static let surface = Color.white.opacity(0.08)
         public static let hover = Color.white.opacity(0.13)
         public static let pressed = Color.white.opacity(0.19)
         public static let warning = Color.orange
+        public static let settingsSecondary = Color.secondary
         public static let disabledOpacity = 0.35
         public static let pressedOpacity = 0.88
     }
@@ -31,10 +34,11 @@ public enum IslandDesign {
     public enum Layout {
         public static let notchWidthPadding: CGFloat = 12
         public static let notchBottomOverlap: CGFloat = 4
+        public static let notchTopBleed: CGFloat = 1
         public static let compactExtraWidth: CGFloat = 144
         public static let compactExtraHeight: CGFloat = 4
         public static let expandedWidth: CGFloat = 420
-        public static let expandedBodyHeight: CGFloat = 268
+        public static let expandedBodyHeight: CGFloat = 224
         public static let collapsedTopRadius: CGFloat = 6
         public static let collapsedBottomRadius: CGFloat = 14
         public static let compactTopRadius: CGFloat = 8
@@ -141,16 +145,15 @@ public enum IslandDesign {
         public static let accentBrightnessFloor = 0.58
         public static let backdropOpacity = 0.16
         public static let backdropRadius: CGFloat = 240
+        public static let backdropAspect: CGFloat = 1.5
     }
 
     public enum Control {
-        public static let radius: CGFloat = 12
         public static let padding: CGFloat = 10
         public static let transportSize: CGFloat = 44
         public static let primarySize: CGFloat = 52
         public static let transportSymbol: CGFloat = 18
         public static let primarySymbol: CGFloat = 22
-        public static let footerHeight: CGFloat = 24
         public static let placeholderSymbol: CGFloat = 28
         public static let placeholderSize: CGFloat = 52
     }
@@ -164,6 +167,7 @@ public enum IslandDesign {
     public enum Marquee {
         public static let speed: CGFloat = 24
         public static let holdDuration = 1.8
+        public static let rampDuration = 0.45
         public static let gap: CGFloat = 32
         public static let fadeWidth: CGFloat = 12
     }

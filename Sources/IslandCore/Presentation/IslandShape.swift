@@ -19,10 +19,12 @@ public struct SurfaceMetrics: Equatable, Sendable {
 public struct IslandShape: Shape {
     public var topRadius: CGFloat
     public var bottomRadius: CGFloat
+    public var topBleed: CGFloat
 
-    public init(topRadius: CGFloat, bottomRadius: CGFloat) {
+    public init(topRadius: CGFloat, bottomRadius: CGFloat, topBleed: CGFloat = 0) {
         self.topRadius = topRadius
         self.bottomRadius = bottomRadius
+        self.topBleed = topBleed
     }
 
     public var animatableData: AnimatablePair<CGFloat, CGFloat> {
@@ -30,7 +32,9 @@ public struct IslandShape: Shape {
         set { topRadius = newValue.first; bottomRadius = newValue.second }
     }
 
-    public func path(in rect: CGRect) -> Path {
+    public func path(in bounds: CGRect) -> Path {
+        let rect = CGRect(x: bounds.minX, y: bounds.minY - topBleed,
+                          width: bounds.width, height: bounds.height + topBleed)
         let top = min(max(0, topRadius), min(rect.width, rect.height) / 2)
         let bottom = min(max(0, bottomRadius), min(rect.width, rect.height) / 2)
         var path = Path()

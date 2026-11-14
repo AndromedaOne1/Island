@@ -88,12 +88,13 @@ public struct IslandLayout: Equatable, Sendable {
                                    bottomRadius: screen.hasNotch ? IslandDesign.Layout.collapsedBottomRadius : IslandDesign.Layout.pillCollapsedRadius)
         compact = SurfaceMetrics(width: min(baseWidth + IslandDesign.Layout.compactExtraWidth, availableWidth), height: baseHeight + IslandDesign.Layout.compactExtraHeight,
                                  topRadius: screen.hasNotch ? IslandDesign.Layout.compactTopRadius : IslandDesign.Layout.pillCompactRadius, bottomRadius: IslandDesign.Layout.compactBottomRadius)
-        expanded = SurfaceMetrics(width: min(IslandDesign.Layout.expandedWidth, availableWidth), height: min(depth + IslandDesign.Layout.expandedBodyHeight, frame.height - IslandDesign.Spacing.content),
+        expanded = SurfaceMetrics(width: min(max(IslandDesign.Layout.expandedWidth, compact.width), availableWidth), height: min(depth + IslandDesign.Layout.expandedBodyHeight, frame.height - IslandDesign.Spacing.content),
                                   topRadius: screen.hasNotch ? IslandDesign.Layout.expandedTopRadius : IslandDesign.Layout.pillExpandedRadius, bottomRadius: IslandDesign.Layout.expandedBottomRadius)
         let canvasWidth = max(expanded.width, compact.width) + IslandDesign.Layout.canvasHorizontalMargin
         let canvasHeight = expanded.height + IslandDesign.Layout.canvasVerticalMargin
         panelFrame = CGRect(x: centerX - canvasWidth / 2, y: topY - canvasHeight,
-                            width: canvasWidth, height: canvasHeight)
+                            width: canvasWidth,
+                            height: canvasHeight + (screen.hasNotch ? IslandDesign.Layout.notchTopBleed : 0))
     }
 
     public func metrics(for presentation: IslandPresentation) -> SurfaceMetrics {
@@ -112,21 +113,9 @@ public struct IslandLayout: Equatable, Sendable {
     public func contains(_ point: CGPoint, metrics: SurfaceMetrics) -> Bool {
         let rect = surfaceRect(for: metrics)
         guard rect.contains(point) else { return false }
-        let topRadius = min(max(0, metrics.topRadius), min(rect.width, rect.height) / 2)
-        let bottomRadius = min(max(0, metrics.bottomRadius), min(rect.width, rect.height) / 2)
         let local = CGPoint(x: point.x - rect.minX, y: rect.maxY - point.y)
-        for (center, radius) in [
-            (CGPoint(x: topRadius, y: topRadius), topRadius),
-            (CGPoint(x: rect.width - topRadius, y: topRadius), topRadius),
-            (CGPoint(x: bottomRadius, y: rect.height - bottomRadius), bottomRadius),
-            (CGPoint(x: rect.width - bottomRadius, y: rect.height - bottomRadius), bottomRadius)
-        ] {
-            let inCornerX = center.x <= rect.width / 2 ? local.x < center.x : local.x > center.x
-            let inCornerY = center.y <= rect.height / 2 ? local.y < center.y : local.y > center.y
-            if inCornerX && inCornerY && hypot(local.x - center.x, local.y - center.y) > radius {
-                return false
-            }
-        }
-        return true
+        return IslandShape(topRadius: metrics.topRadius, bottomRadius: metrics.bottomRadius,
+                           topBleed: mode == .notch ? IslandDesign.Layout.notchTopBleed : 0)
+            .path(in: CGRect(origin: .zero, size: rect.size)).contains(local)
     }
 }
