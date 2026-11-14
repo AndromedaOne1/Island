@@ -1,8 +1,28 @@
+# Generated Swift and app build products
 .build/
 .swiftpm/
 build/
+*.app/
+*.dSYM/
+
+# Local caches, logs, and editor state
+.cache/
 .DS_Store
 xcuserdata/
 *.xcuserstate
-.cache/
+*.log
+.codex/
+.agents/
 
+# Local credentials and signing material
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Obsolete local repository backup
+/Island-history.bundle
