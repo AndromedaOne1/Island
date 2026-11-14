@@ -35,7 +35,7 @@ transitions from reaching the camera strip.
 ## Shape and motion
 
 The notch remains anchored at the physical screen edge. The window and surface
-surface extend one point above it to remove the compositor's translucent first
+extend one point above it to remove the compositor's translucent first
 pixel row. A one-point content inset preserves the original content coordinates.
 Two points of overlap below the notch protect its lower edge. Pill mode retains
 its detached position with no top overscan.

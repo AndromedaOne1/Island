@@ -11,7 +11,8 @@ A macOS 14+ menu bar app with an animated dark glass overlay around the camera n
 - A modular interface for future features.
 - Menu bar controls and shell settings.
 
-The core shell is accepted. Now Playing (step 2) is implemented.
+The core shell and Now Playing are accepted. Current milestone: **0.3.0 —
+`v0.3-multimodule`**, with active-module paging and Timer/Stopwatch.
 The primary hardware is a MacBook Air 15-inch M3 with a notch on macOS 27.2.1.
 The pill layout remains available for displays without a notch.
 
@@ -34,8 +35,21 @@ and manual checklist.
   or **Use Music/Spotify backup** is selected in Settings.
 - Explicit, player-specific Automation consent with an explanation before asking.
 
-No current track is a normal collapsed state. Paused tracks remain visible with
-static indicators. Missing artwork and unknown duration are supported.
+Without playback or an active timer, the shell stays collapsed. Paused tracks
+remain visible with static indicators. Missing artwork and unknown duration are
+supported.
+
+## Multiple modules and Timer/Stopwatch
+
+- Compact always shows the active module with the highest priority.
+- Expanded dots switch between active modules with a smooth transition.
+- Timer priority is 200; Now Playing priority is 100. Paused sessions stay active.
+- Open **Timer & Stopwatch…** from the menu or the left expanded-wing clock.
+- Timer supports Start, Pause, Resume, Reset, 1/5/10-minute presets, and custom
+  minutes/seconds. Stopwatch uses the same controls without a countdown.
+- A completed timer plays the system alert sound once and briefly animates.
+  **Done/Reset** dismisses it; **Restart** starts the same duration again.
+- Time includes Mac sleep. Sessions are not restored after quitting the app.
 
 ## Project structure
 
@@ -70,7 +84,8 @@ app without a Dock icon. Quit Island before rebuilding a running copy.
 - Automatic display selection prefers a notched screen; a disconnected selected
   display temporarily falls back to automatic selection.
 
-When a track is available, Now Playing owns the compact and expanded content.
+When a track or timer is available, priority chooses compact and dots choose the
+expanded page. Fresh hover expansion starts with the priority winner.
 Compact preview remains a shell diagnostic when no module is active.
 Now Playing Settings can disable the module, select the backup, enable individual
 backup players, or retry the automatic source. The backup checks only running
@@ -88,7 +103,8 @@ System Settings → Privacy & Security → Automation.
 Tests use Swift Testing and cover screen coordinates, auxiliary-area fallback,
 rounded hit regions, hover cancellation and reentry, preferences, and module
 priority/lifecycle, Now Playing data parsing, progress, source fallback, explicit
-consent, and process timeout/cancellation. The test script locates Swift Testing
+consent, timer/stopwatch pause/resume/completion, module paging, and process
+timeout/cancellation. The test script locates Swift Testing
 frameworks and macros in the installed toolchain, including Command Line Tools.
 If the Swift build planner fails, `ISLAND_TEST_BUILD_SYSTEM=native ./Scripts/test.sh`
 selects its alternative backend. The bundle script validates metadata and signatures.

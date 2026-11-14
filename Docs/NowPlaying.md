@@ -61,7 +61,7 @@ previous player. Generic automatic commands follow the system-elected source.
 
 ## Verification and manual testing
 
-The Swift Testing suite, including design geometry coverage, passes 37 tests
+The Swift Testing suite, including design geometry coverage, passes 48 tests
 in debug and release. It covers
 full/diff/null data, microsecond conversion, malformed data, partial/multiple
 stream frames, timestamp-based progress, pause and unknown timing, stale callbacks,

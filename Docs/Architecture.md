@@ -1,8 +1,8 @@
 # Island architecture
 
 Status: Swift package to `Island.app` and the `IslandModule` contract confirmed.
-Step 1 (core shell) is accepted. Step 2 (Now Playing) is implemented, with an
-isolated automatic source and consent-aware Music/Spotify backups.
+Core shell, Now Playing, and the design foundation are accepted. Version 0.3.0
+adds active-module paging and Timer/Stopwatch; milestone tag: `v0.3-multimodule`.
 
 ## Targets and directories
 
@@ -17,11 +17,12 @@ Sources/
     Settings/          Persistent shell preferences
     Design/            Shared visual tokens, components, and artwork palette
     NowPlaying/        Playback model, source coordination, processes, and views
+    Timer/             Continuous-clock timer/stopwatch model, lifecycle, and views
   IslandApp/
     App/               App delegate, menu bar item, and settings window
     Views/             Shell content and settings interface
 Tests/
-  IslandCoreTests/     Geometry, interaction, modules, and playback tests
+  IslandCoreTests/     Geometry, interaction, module selection, playback, and timers
 Resources/
   Info.plist           App bundle metadata; macOS 14 minimum
   MediaRemote/         Island-owned helper parent-lifetime watchdog
@@ -63,15 +64,54 @@ public protocol IslandModule: ObservableObject
 ```
 
 The registry owns module instances, manages their enabled lifecycle, and forwards
-observable updates to the shell. The highest-priority enabled active module owns
-the compact and expanded content. Equal priorities use stable identifier order.
+observable updates to the shell. `isActive` is the authoritative module state;
+the `state` convenience property maps it to `IslandModuleState.idle`/`.active`.
+The highest-priority enabled active module always owns compact. Equal priorities
+use stable identifier order. `activeModules` exposes that same ordered list.
+Expanded uses `expandedModule`, independently selected with `select(_:)` or
+`cycle(by:)`. Invalid/idle/disabled selections are rejected. A selected module
+becoming idle or disabled falls back to the priority winner; a new higher-priority
+module does not interrupt a manually selected page. Each fresh hover expansion
+clears the page selection and starts with the compact winner.
 Only the module boundary erases view types; each module can use concrete SwiftUI
 views internally. Compact views occupy separate wings outside the notch.
 
+Two or more active modules add a 24-point row of clickable dots below the content.
+Dots expose module names, selected accessibility traits, and previous/next
+accessibility actions. Page changes use the shared fade/scale/blur transition;
+Reduce Motion uses opacity only. The shared 162-point content viewport keeps the
+dots stationary between pages. Expanded height grows by 24 points only when
+paging is needed; the existing panel canvas has room for that row.
+
 The app registers `NowPlayingModule` at priority 100. A playback snapshot or a
-pending backup consent notice activates it. Idle media leaves the shell collapsed;
-paused media remains active. An empty expanded view offers shell controls, and a
-menu command can preview the compact layout without a live module.
+pending backup consent notice activates it. Paused media remains active. Timer
+is registered at priority 200. Without any active modules, ordinary hover keeps
+the shell collapsed; activation under an already-hovered pointer can expand it.
+Explicit compact preview remains a shell diagnostic exception.
+
+## Timer and Stopwatch
+
+`TimerModel` separates timing from scheduling and UI. Its phases are idle,
+running, paused, and finished, with countdown/stopwatch modes. Running and paused
+sessions are active; a completed countdown stays active until Done/Reset. Mode
+and duration changes require idle. Presets are 1, 5, and 10 minutes; custom
+minute/second controls support 1 second through 24 hours without keyboard focus
+inside the nonactivating panel. Start also applies an open custom editor.
+
+The injected clock defaults to Swift `ContinuousClock`, counting sleep while
+avoiding wall-clock adjustments. Pause stores elapsed time and resume starts a
+new anchor. Countdown clamps at zero; stopwatch accumulates elapsed time. A
+single cancellable 100 ms task runs only while an enabled session is running.
+Completion cancels ticking, invokes one system alert sound, and shows a brief
+1.2-second celebration. Reduce Motion suppresses scale and progress interpolation.
+Stopping the module cancels tasks, freezes running time, and suppresses alerts.
+Timer state is in memory and is not restored after quitting Island.
+
+The Timer & Stopwatch menu item and left expanded-wing clock button open a small
+controller window using the same module view. This provides a way to configure
+an idle module without publishing it as active. Once started, the timer appears
+in compact and in the expanded active-page list. The window is intentionally
+activating; ordinary overlay playback and timer controls remain nonactivating.
 
 ## Now Playing boundary
 
@@ -110,7 +150,8 @@ revision, verified behavior, licensing, and failure limitations.
   pass through mouse input by switching `ignoresMouseEvents` with pointer tracking.
 - A local/global mouse monitor observes pointer motion without keyboard monitoring
   or Accessibility access. A tracking area handles entry and exit over the panel.
-- Hover expands after a configurable delay. Leaving collapses after a short delay.
+- Hover expands an active island after a configurable delay. With no active
+  modules it stays collapsed. Leaving collapses after a short delay.
   Surface clicks never change expansion; playback controls retain their actions.
 - A custom `Shape` animates its top and bottom corner radii alongside its size.
 - Opening Settings is an explicit user action and activates the settings window.
@@ -153,14 +194,37 @@ uses public `SMAppService.mainApp` and changes only when its toggle is used.
 
 No private APIs are needed for the core shell. The accepted Now Playing source
 decision uses private MediaRemote inside its helper and public Apple Events as
-the Music/Spotify backup. Timer,
+the Music/Spotify backup.
 Calendar, Battery, HUD, shelf, and device-use features remain later milestones.
 
 ## Validation
 
 Build the app bundle with the installed Swift toolchain. Test notch/fallback
 geometry on offset and negative-coordinate screens, invalid auxiliary geometry,
-module priority and lifecycle, and hover state transitions. Launch the
+module priority, independent paging, lifecycle, countdown/stopwatch timing,
+single completion alerts, and hover state transitions. Launch the
 bundle and check panel flags, active application, and screen placement. Manual
 hardware testing must cover the physical notch, menu interaction, fullscreen,
 Spaces, external monitor changes, animation, and launch-at-login behavior.
+
+For version 0.3.0, 48 Swift Testing tests pass in debug and release. Native
+screen captures verify compact Timer priority, both expanded pages, paused Timer,
+Stopwatch, completion, and idle collapse with ordinary and reduced motion.
+The same Timer view in a normal test window was checked through real UI actions:
+all presets, zero-duration rejection, a three-second custom countdown, Done,
+pause/resume/reset, and Stopwatch. Sleep is covered by an injected-clock jump;
+physical sleep/wake and audible alert volume still need hardware testing.
+
+Manual milestone checklist:
+
+1. Start playback and a timer. Compact shows Timer; the expanded dots select
+   Timer or Now Playing without changing compact priority.
+2. Start 1/5/10-minute presets and a custom duration from Timer & Stopwatch.
+   Check Pause, Resume, Reset, Restart, and Done.
+3. Switch to Stopwatch after Reset and check start/pause/resume/reset.
+4. Let a short timer finish: one system alert and a brief completion animation.
+5. Clear media and reset Timer: ordinary hover keeps the island collapsed.
+6. Enable Reduce Motion in Accessibility: paging and completion use fades,
+   without scale or interpolated ring movement.
+7. Sleep during a countdown and wake: elapsed sleep counts; completion is
+   delivered after the app resumes.
