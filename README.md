@@ -36,9 +36,11 @@ from source using Apple's clang; CMake is not needed.
 
 ## Build and run
 
-From the repository directory:
+Clone the repository, then build locally:
 
 ```sh
+git clone https://github.com/AndromedaOne1/Island.git
+cd Island
 ./Scripts/build-app.sh         # Debug: build/Island.app
 ./Scripts/build-app.sh release # Release: build/Island.app
 open -g build/Island.app
