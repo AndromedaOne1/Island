@@ -112,10 +112,15 @@ public struct IslandLayout: Equatable, Sendable {
 
     public func contains(_ point: CGPoint, metrics: SurfaceMetrics) -> Bool {
         let rect = surfaceRect(for: metrics)
-        guard rect.contains(point) else { return false }
+        let topBleed = mode == .notch ? IslandDesign.Layout.notchTopBleed : 0
+        // CGRect excludes its maximum edge. Match the overscanned drawing bounds
+        // so a cursor parked at the screen's top edge remains inside the island.
+        let hitBounds = CGRect(x: rect.minX, y: rect.minY, width: rect.width,
+                               height: rect.height + topBleed)
+        guard hitBounds.contains(point) else { return false }
         let local = CGPoint(x: point.x - rect.minX, y: rect.maxY - point.y)
         return IslandShape(topRadius: metrics.topRadius, bottomRadius: metrics.bottomRadius,
-                           topBleed: mode == .notch ? IslandDesign.Layout.notchTopBleed : 0)
+                           topBleed: topBleed)
             .path(in: CGRect(origin: .zero, size: rect.size)).contains(local)
     }
 }

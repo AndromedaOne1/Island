@@ -124,7 +124,10 @@ the notch gap; when a notched screen temporarily lacks valid areas, a centered
 inset use the detached pill, eight points below the top edge.
 The notched window extends one point above the screen to avoid a translucent
 compositor edge. Content is inset by that same point, and input uses the exact
-overscanned shape path. Design geometry and motion live in `IslandDesign`;
+overscanned bounds and shape path. Including overscan in the input bounding box
+keeps the physical screen's top edge inside hover detection; `CGRect.contains`
+otherwise excludes that maximum edge. Design geometry and motion live in
+`IslandDesign`;
 see [Design.md](Design.md) for the shared components and visual verification.
 
 `IslandInteraction` cancels pending hover and collapse tasks on dismiss/reset.

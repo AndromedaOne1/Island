@@ -83,6 +83,22 @@ func notchUsesGlobalScreenCoordinates(origin: CGPoint) {
     #expect(layout.panelFrame.midX == 993)
 }
 
+@Test(arguments: [CGPoint.zero, CGPoint(x: -1800, y: 700), CGPoint(x: 600, y: -1200)])
+func hoveringAtTheScreenTopEdgeIncludesTheCameraStrip(origin: CGPoint) {
+    let layout = IslandLayout(screen: notchedScreen(origin: origin))
+    let notch = layout.notchRect!
+    for presentation in [IslandPresentation.collapsed, .compact, .expanded] {
+        let metrics = layout.metrics(for: presentation)
+        for x in [notch.minX + 0.5, notch.midX, notch.maxX - 0.5] {
+            #expect(layout.contains(CGPoint(x: x, y: layout.topY), metrics: metrics))
+            #expect(layout.contains(CGPoint(x: x, y: layout.topY - 0.5), metrics: metrics))
+        }
+        #expect(!layout.contains(CGPoint(x: notch.midX, y: layout.panelFrame.maxY + 1), metrics: metrics))
+        let rect = layout.surfaceRect(for: metrics)
+        #expect(!layout.contains(CGPoint(x: rect.minX + 0.5, y: layout.topY), metrics: metrics))
+    }
+}
+
 @Test(arguments: [CGFloat(186), CGFloat(410), CGFloat(520)])
 func animatedSilhouetteKeepsTheEntireNotchCovered(notchWidth: CGFloat) {
     let frame = notchedScreen().frame

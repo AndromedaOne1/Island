@@ -37,7 +37,9 @@ Collapsed/compact/expanded sizes derive from the measured notch width and depth.
 Expanded width also respects the compact width on unusually wide notches.
 The expanded lower corners use a 38-point radius, while the top radius stays
 small at 10 points. Size and both radii animate together with one spring and a
-stable panel canvas. The hit path includes the same top overscan as the renderer.
+stable panel canvas. The hit bounds and path include the same top overscan as
+the renderer. This also includes a pointer parked exactly at the screen's top
+edge above the camera; the earlier bounding-box check excluded that edge.
 
 At the current Mac's measured 208 × 37.5-point notch:
 
@@ -79,10 +81,17 @@ The bundle script validates metadata and ad-hoc signatures.
 
 Native cursor positioning verified both collapsed and compact paths through the
 real shell: hover expanded the surface, moving into its content kept it open,
-and leaving restored the resting state. No clicks or Accessibility prompt were
+and leaving restored the resting state. The camera center and exact screen top
+edge have dedicated regression coverage. No clicks or Accessibility prompt were
 needed, and the original cursor position was restored afterward. Button presses,
 rapid retargeting, native accessibility changes, and Settings input remain in
 the owner's manual check:
+
+A follow-up check captured the running release `Island.app`, with no replacement
+panel: parking the cursor at the exact top edge above the camera expanded the
+island, the center of the camera strip kept it open, and leaving restored compact
+content. Requested and actual cursor coordinates were checked before each
+`screencapture`, and no clicks were sent.
 
 - Hover and leave repeatedly; watch size, corner radii, and content transitions.
 - Check the physical notch edge for a bright line or gap.
