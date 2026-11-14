@@ -123,3 +123,25 @@ import Testing
     #expect(registry.activeModules.isEmpty)
     #expect(music.state == .idle)
 }
+
+@Test @MainActor func realTimerTakesCompactPriorityAndResetRestoresMusic() {
+    var now = 0.0
+    let model = TimerModel(clock: { now })
+    let timer = TimerModule(model: model, automaticallyTick: false, completion: {})
+    let registry = ModuleRegistry()
+    registry.register(TestModule("music", priority: 100))
+    registry.register(timer)
+    #expect(registry.activeModule?.id == "music")
+    #expect(model.begin())
+    #expect(registry.activeModule?.id == "timer")
+    registry.select("music")
+    now = 10
+    model.pause()
+    #expect(registry.activeModule?.id == "timer")
+    #expect(registry.expandedModule?.id == "music")
+    registry.select("timer")
+    model.reset()
+    #expect(registry.activeModule?.id == "music")
+    #expect(registry.expandedModule?.id == "music")
+    registry.stopAll()
+}

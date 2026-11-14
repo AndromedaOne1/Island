@@ -65,6 +65,7 @@ struct ShellView: View {
     @ObservedObject var interaction: IslandInteraction
     @ObservedObject var registry: ModuleRegistry
     let openSettings: () -> Void
+    var openTimer: () -> Void = {}
     @Environment(\.islandReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -133,6 +134,7 @@ struct ShellView: View {
                             .allowsHitTesting(false)
                     }
                 }
+                .frame(height: IslandDesign.Modules.contentHeight, alignment: .top)
                 .animation(reduceMotion ? .easeOut(duration: IslandDesign.Motion.reducedDuration) : IslandDesign.Motion.content,
                            value: registry.expandedModule?.id)
                 if registry.activeModules.count > 1 {
@@ -158,7 +160,9 @@ struct ShellView: View {
             .frame(width: layout.expanded.width, alignment: .top)
             .overlay(alignment: .top) {
                 HStack(spacing: 0) {
-                    Color.clear.frame(maxWidth: .infinity).allowsHitTesting(false)
+                    Button(action: openTimer) { Image(systemName: "timer") }
+                        .help("Timer & Stopwatch").accessibilityLabel("Timer & Stopwatch")
+                        .frame(maxWidth: .infinity)
                     Color.clear
                         .frame(width: (layout.notchRect?.width ?? IslandDesign.Layout.pillWingGap) + IslandDesign.Layout.notchWidthPadding)
                         .allowsHitTesting(false)

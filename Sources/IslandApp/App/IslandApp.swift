@@ -24,6 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let registry = ModuleRegistry()
     private let loginItem = LoginItemController()
     private let nowPlayingPreferences = NowPlayingPreferences()
+    private let timer = TimerModule()
     private lazy var nowPlaying: NowPlayingModule = {
         let bundle = Bundle.main.bundleURL
         let primary = MediaRemoteSource(scriptURL: bundle.appendingPathComponent("Contents/Resources/NowPlaying/mediaremote-adapter.pl"),
@@ -34,17 +35,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var panel = IslandPanelController(settings: settings, interaction: interaction)
     private var statusItem: NSStatusItem?
     private var settingsWindow: NSWindow?
+    private var timerWindow: NSWindow?
     private var subscriptions: Set<AnyCancellable> = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         panel.setContent(ShellView(panel: panel, interaction: interaction, registry: registry,
-                                  openSettings: { [weak self] in self?.showSettings() }))
+                                  openSettings: { [weak self] in self?.showSettings() },
+                                  openTimer: { [weak self] in self?.showTimer() }))
         panel.start()
         installMenuBarItem()
         settings.$isVisible.sink { [weak self] _ in
             Task { @MainActor [weak self] in self?.updateMenu() }
         }.store(in: &subscriptions)
         registry.register(nowPlaying, enabled: nowPlayingPreferences.isEnabled)
+        registry.register(timer)
         nowPlayingPreferences.$isEnabled.sink { [weak self] enabled in
             Task { @MainActor [weak self] in self?.registry.setEnabled(enabled, for: "now-playing") }
         }.store(in: &subscriptions)
@@ -78,6 +82,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         preview.target = self
         preview.tag = 2
         menu.addItem(.separator())
+        let timer = menu.addItem(withTitle: "Timer & Stopwatch…", action: #selector(showTimer), keyEquivalent: "")
+        timer.target = self
         let settings = menu.addItem(withTitle: "Settings…", action: #selector(showSettings), keyEquivalent: ",")
         settings.target = self
         menu.addItem(.separator())
@@ -94,6 +100,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func toggleVisibility() { settings.isVisible.toggle() }
     @objc private func toggleCompactPreview() { interaction.setCompactPreview(!interaction.isCompactPreviewEnabled) }
+
+    @objc private func showTimer() {
+        interaction.dismiss()
+        if timerWindow == nil {
+            let window = NSWindow(contentRect: NSRect(origin: .zero, size: IslandDesign.Timer.windowSize),
+                                  styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false)
+            window.title = "Timer & Stopwatch"
+            window.isReleasedWhenClosed = false
+            window.appearance = NSAppearance(named: .darkAqua)
+            window.backgroundColor = .black
+            window.contentView = NSHostingView(rootView: timer.expandedView()
+                .padding(IslandDesign.Spacing.content)
+                .frame(width: IslandDesign.Timer.windowSize.width, height: IslandDesign.Timer.windowSize.height)
+                .foregroundStyle(IslandDesign.Colors.primary).preferredColorScheme(.dark))
+            window.center()
+            timerWindow = window
+        }
+        NSApplication.shared.activate(ignoringOtherApps: true)
+        timerWindow?.makeKeyAndOrderFront(nil)
+    }
 
     @objc private func showSettings() {
         interaction.dismiss()

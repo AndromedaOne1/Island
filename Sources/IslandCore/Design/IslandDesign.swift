@@ -196,5 +196,25 @@ public enum IslandDesign {
     public enum Modules {
         public static let navigationHeight: CGFloat = 24
         public static let dotSize: CGFloat = 5
+        public static let contentHeight: CGFloat = 162
+    }
+
+    public enum Timer {
+        public static let accent = Color.orange
+        public static let stopwatchAccent = Color.mint
+        public static let tickInterval = 0.1
+        public static let celebrationDuration = 1.2
+        public static let celebrationScale: CGFloat = 1.04
+        public static let glowOpacity = 0.12
+        public static let compactRingSize: CGFloat = 24
+        public static let ringSize: CGFloat = 44
+        public static let ringWidth: CGFloat = 2.5
+        public static let modeHeight: CGFloat = 22
+        public static let headerHeight: CGFloat = 50
+        public static let presetHeight: CGFloat = 26
+        public static let stepperLabelWidth: CGFloat = 36
+        public static let minimumTextScale: CGFloat = 0.7
+        public static let timeFont = Font.system(size: 32, weight: .light, design: .rounded)
+        public static let windowSize = CGSize(width: 384, height: 224)
     }
 }
