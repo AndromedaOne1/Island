@@ -6,6 +6,8 @@ public enum CompactPosition {
     case trailing
 }
 
+public enum IslandModuleState: Equatable, Sendable { case idle, active }
+
 @MainActor
 public protocol IslandModule: ObservableObject
     where ObjectWillChangePublisher == ObservableObjectPublisher {
@@ -18,4 +20,8 @@ public protocol IslandModule: ObservableObject
     func expandedView() -> AnyView
     func start()
     func stop()
+}
+
+public extension IslandModule {
+    var state: IslandModuleState { isActive ? .active : .idle }
 }

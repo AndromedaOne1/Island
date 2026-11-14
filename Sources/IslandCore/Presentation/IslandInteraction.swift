@@ -23,11 +23,17 @@ public final class IslandInteraction: ObservableObject {
         isHovered = true
         collapseTask?.cancel()
         collapseTask = nil
-        guard !hoverExpanded else { return }
+        scheduleExpansion()
+    }
+
+    private func scheduleExpansion() {
+        guard isHovered, !hoverExpanded, hasActiveModule || isCompactPreviewEnabled else { return }
+        hoverTask?.cancel()
         let delay = max(0, hoverDelay)
         hoverTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(delay))
-            guard !Task.isCancelled, let self, self.isHovered else { return }
+            guard !Task.isCancelled, let self, self.isHovered,
+                  self.hasActiveModule || self.isCompactPreviewEnabled else { return }
             self.hoverExpanded = true
             self.refreshPresentation()
         }
@@ -59,12 +65,23 @@ public final class IslandInteraction: ObservableObject {
     }
 
     public func setCompactPreview(_ enabled: Bool) {
+        guard isCompactPreviewEnabled != enabled else { return }
         isCompactPreviewEnabled = enabled
-        refreshPresentation()
+        updateAvailability()
     }
 
     public func setHasActiveModule(_ active: Bool) {
+        guard hasActiveModule != active else { return }
         hasActiveModule = active
+        updateAvailability()
+    }
+
+    private func updateAvailability() {
+        if !hasActiveModule && !isCompactPreviewEnabled {
+            dismiss()
+        } else {
+            scheduleExpansion()
+        }
         refreshPresentation()
     }
 

@@ -71,3 +71,55 @@ import Testing
     #expect(registry.activeModule?.id == module.id)
     withExtendedLifetime(subscription) {}
 }
+
+@Test @MainActor func expandedSelectionDoesNotChangeCompactPriority() {
+    let registry = ModuleRegistry()
+    registry.register(TestModule("music", priority: 100))
+    registry.register(TestModule("timer", priority: 200))
+    registry.register(TestModule("idle", priority: 300, active: false))
+    #expect(registry.activeModules.map(\.id) == ["timer", "music"])
+    #expect(!registry.select("idle"))
+    #expect(!registry.select("missing"))
+    #expect(registry.select("music"))
+    #expect(registry.expandedModule?.id == "music")
+    #expect(registry.activeModule?.id == "timer")
+    registry.beginExpandedPresentation()
+    #expect(registry.expandedModule?.id == "timer")
+}
+
+@Test @MainActor func moduleCyclingWrapsAndHandlesEmptyAndSingleLists() {
+    let registry = ModuleRegistry()
+    registry.cycle(by: -1)
+    #expect(registry.expandedModule == nil)
+    registry.register(TestModule("a", priority: 2))
+    registry.cycle(by: 1)
+    #expect(registry.expandedModule?.id == "a")
+    registry.register(TestModule("b", priority: 1))
+    registry.cycle(by: 1)
+    #expect(registry.expandedModule?.id == "b")
+    registry.cycle(by: 1)
+    #expect(registry.expandedModule?.id == "a")
+    registry.cycle(by: -1)
+    #expect(registry.expandedModule?.id == "b")
+    registry.cycle(by: Int.min)
+    #expect(registry.expandedModule?.id == "b")
+}
+
+@Test @MainActor func selectedModuleFallsBackAfterIdleOrDisable() async throws {
+    let registry = ModuleRegistry()
+    let music = TestModule("music", priority: 100)
+    let timer = TestModule("timer", priority: 200)
+    registry.register(music)
+    registry.register(timer)
+    registry.select(music.id)
+    timer.priority = 300
+    #expect(registry.expandedModule?.id == music.id)
+    music.isActive = false
+    #expect(registry.expandedModule?.id == timer.id)
+    try await Task.sleep(for: .milliseconds(30))
+    #expect(registry.selectedModuleID == nil)
+    registry.setEnabled(false, for: timer.id)
+    #expect(registry.expandedModule == nil)
+    #expect(registry.activeModules.isEmpty)
+    #expect(music.state == .idle)
+}

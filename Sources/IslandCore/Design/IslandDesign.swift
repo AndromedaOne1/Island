@@ -192,4 +192,9 @@ public enum IslandDesign {
         public static let size = CGSize(width: 480, height: 560)
         public static let delayLabelWidth: CGFloat = 40
     }
+
+    public enum Modules {
+        public static let navigationHeight: CGFloat = 24
+        public static let dotSize: CGFloat = 5
+    }
 }

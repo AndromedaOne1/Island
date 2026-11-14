@@ -70,7 +70,7 @@ struct ShellView: View {
     var body: some View {
         Group {
             if let layout = panel.layout {
-                AnimatedSurface(metrics: layout.metrics(for: interaction.presentation),
+                AnimatedSurface(metrics: surfaceMetrics(layout),
                                 topBleed: layout.mode == .notch ? IslandDesign.Layout.notchTopBleed : 0,
                                 notchDepth: layout.notchRect?.height ?? 0,
                                 notchWidth: layout.notchRect?.width ?? 0) {
@@ -88,11 +88,22 @@ struct ShellView: View {
                 .onPreferenceChange(SurfaceMetricsKey.self) { metrics in
                     Task { @MainActor in panel.updateSurfaceMetrics(metrics) }
                 }
+                .onChange(of: interaction.presentation) { _, next in
+                    if next == .expanded { registry.beginExpandedPresentation() }
+                }
             }
         }
         .foregroundStyle(IslandDesign.Colors.primary)
         .preferredColorScheme(.dark)
         .ignoresSafeArea()
+    }
+
+    private func surfaceMetrics(_ layout: IslandLayout) -> SurfaceMetrics {
+        var metrics = layout.metrics(for: interaction.presentation)
+        if interaction.presentation == .expanded && registry.activeModules.count > 1 {
+            metrics.height += IslandDesign.Modules.navigationHeight
+        }
+        return metrics
     }
 
     @ViewBuilder private func surfaceContent(_ layout: IslandLayout) -> some View {
@@ -109,14 +120,36 @@ struct ShellView: View {
             .frame(width: layout.compact.width, height: layout.compact.height)
             .allowsHitTesting(false)
         case .expanded:
-            VStack(spacing: IslandDesign.Spacing.small) {
-                if let module = registry.activeModule {
-                    module.expandedView()
-                } else {
-                    IslandPlaceholder(symbol: "waveform", title: "Nothing playing",
-                                      subtitle: "Your audio will appear here.")
-                        .frame(height: IslandDesign.Artwork.expandedSize + IslandDesign.Control.primarySize + IslandDesign.Spacing.wide)
-                        .allowsHitTesting(false)
+            VStack(spacing: 0) {
+                ZStack {
+                    if let module = registry.expandedModule {
+                        module.expandedView()
+                            .id(module.id)
+                            .transition(.islandContent(reduceMotion: reduceMotion))
+                    } else {
+                        IslandPlaceholder(symbol: "timer", title: "No active modules",
+                                          subtitle: "Start a timer from the menu bar.")
+                            .frame(height: IslandDesign.Artwork.expandedSize + IslandDesign.Control.primarySize + IslandDesign.Spacing.wide)
+                            .allowsHitTesting(false)
+                    }
+                }
+                .animation(reduceMotion ? .easeOut(duration: IslandDesign.Motion.reducedDuration) : IslandDesign.Motion.content,
+                           value: registry.expandedModule?.id)
+                if registry.activeModules.count > 1 {
+                    HStack(spacing: IslandDesign.Spacing.tight) {
+                        ForEach(registry.activeModules, id: \.id) { module in
+                            Button { registry.select(module.id) } label: {
+                                Circle().fill(registry.expandedModule?.id == module.id ? IslandDesign.Colors.primary : IslandDesign.Colors.tertiary)
+                                    .frame(width: IslandDesign.Modules.dotSize, height: IslandDesign.Modules.dotSize)
+                            }
+                            .help(module.title).accessibilityLabel(module.title)
+                            .accessibilityAddTraits(registry.expandedModule?.id == module.id ? .isSelected : [])
+                        }
+                    }
+                    .buttonStyle(IslandButtonStyle(.quiet))
+                    .frame(height: IslandDesign.Modules.navigationHeight)
+                    .accessibilityAction(named: "Next module") { registry.cycle(by: 1) }
+                    .accessibilityAction(named: "Previous module") { registry.cycle(by: -1) }
                 }
             }
             .padding(.horizontal, IslandDesign.Spacing.content)
