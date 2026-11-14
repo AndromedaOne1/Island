@@ -1,5 +1,7 @@
 # Island
 
+**English** | [Русский](README.ru.md)
+
 A Dynamic Island-inspired menu bar app for macOS, built with Swift and SwiftUI.
 Island wraps the camera notch in a glass surface that expands on hover to show
 playback controls and timers.
