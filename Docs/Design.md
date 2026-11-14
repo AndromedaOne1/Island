@@ -25,17 +25,24 @@ and ImageIO decoding run in the existing background artwork task; late results
 retain the existing track/lifetime guards. A soft radial gradient and playback
 indicator use the cover's accent.
 
+`IslandGlassBackground.swift` uses a dark `NSVisualEffectView` with behind-window
+blending and a 55% black tint. The camera strip stays opaque and feathers into
+the glass body over 32 points. Reduce Transparency replaces the material with
+solid black. The same animated silhouette clips the material and content. A
+solid camera cover above module content also prevents artwork glows or content
+transitions from reaching the camera strip.
+
 ## Shape and motion
 
-The notch remains anchored at the physical screen edge. The window and black
+The notch remains anchored at the physical screen edge. The window and surface
 surface extend one point above it to remove the compositor's translucent first
 pixel row. A one-point content inset preserves the original content coordinates.
-Four points of overlap below the notch protect its lower edge. Pill mode retains
+Two points of overlap below the notch protect its lower edge. Pill mode retains
 its detached position with no top overscan.
 
 Collapsed/compact/expanded sizes derive from the measured notch width and depth.
 Expanded width also respects the compact width on unusually wide notches.
-The expanded lower corners use a 38-point radius, while the top radius stays
+The expanded lower corners use a 34-point radius, while the top radius stays
 small at 10 points. Size and both radii animate together with one spring and a
 stable panel canvas. The hit bounds and path include the same top overscan as
 the renderer. This also includes a pointer parked exactly at the screen's top
@@ -45,11 +52,14 @@ At the current Mac's measured 208 × 37.5-point notch:
 
 | State | Visible size | Top / bottom radius |
 | --- | --- | --- |
-| Collapsed | 220 × 41.5 pt | 6 / 14 pt |
-| Compact | 364 × 45.5 pt | 8 / 20 pt |
-| Expanded | 420 × 261.5 pt | 10 / 38 pt |
+| Collapsed | 216 × 39.5 pt | 4 / 10 pt |
+| Compact | 328 × 41.5 pt | 6 / 16 pt |
+| Expanded | 384 × 237.5 pt | 10 / 34 pt |
 
-Shell spring: response 0.46, damping 0.86. Content transition: 0.24 seconds,
+Hover starts expansion after 0.05 seconds, with a configurable minimum of 0.02
+seconds. The pointer poll adds at most one 30 Hz interval when no mouse-move
+event arrives. Leaving retains the 0.3-second delay to protect access to controls.
+Shell spring: response 0.32, damping 0.88. Content transition: 0.18 seconds,
 opacity, scale from 0.96, and six-point blur. Button spring: response 0.28,
 damping 0.72, pressed scale 0.90. Reduce Motion uses a short fade without spring
 scaling, blur, automatic marquee, or state-bar motion. The design environment
@@ -73,6 +83,12 @@ The footer became quiet controls in the top wings, expanded height was reduced,
 and top overscan removed the edge. Final checks include all three states, the
 long-title loop boundary, empty content, and reduced-motion rendering. The
 camera-width pixels at the top edge are checked for solid black.
+
+The slimmer glass treatment was reviewed on light and dark backgrounds, with
+live playback and empty content. Artwork is 24/64 points in compact/expanded,
+content insets are 20 points, and playback controls retain 40/48-point targets.
+The material preserves readable contrast on both backgrounds. The solid camera
+cover avoids gradient dithering and keeps the measured camera region black.
 
 The existing test suite plus notch-coverage checks passes in debug and release.
 Coverage includes intermediate morph shapes on 186-, 410-, and 520-point notches,
@@ -100,4 +116,5 @@ content. Requested and actual cursor coordinates were checked before each
 - Play/pause and change tracks; watch the cover, accent, title, and progress.
 - Leave a long title open for a full loop; check both faded edges.
 - Enable Reduce Motion in macOS; check static text and indicator behavior.
+- Enable Reduce Transparency; check that the glass becomes solid black.
 - Stop playback or disable Now Playing; check the empty expanded state.

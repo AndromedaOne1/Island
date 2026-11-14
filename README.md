@@ -1,6 +1,6 @@
 # Island
 
-A macOS 14+ menu bar app with an animated black overlay around the camera notch.
+A macOS 14+ menu bar app with an animated dark glass overlay around the camera notch.
 
 ## Core shell (step 1)
 
@@ -18,7 +18,8 @@ The pill layout remains available for displays without a notch.
 ## Design foundation
 
 Shared tokens define SF Pro typography, color, spacing, state geometry, and motion.
-The island morphs its size and radii with a spring; content fades, scales, and
+The island uses dark, blurred glass with an opaque camera strip and a compact
+silhouette. It morphs its size and radii with a spring; content fades, scales, and
 blurs through transitions. Now Playing uses shared controls, rounded artwork,
 a cover-derived accent, and a softly masked marquee. Reduce Motion is supported.
 See [Docs/Design.md](Docs/Design.md) for the tokens, pixel-edge fix, visual checks,
@@ -59,7 +60,7 @@ app without a Dock icon. Quit Island before rebuilding a running copy.
 
 ## Interaction
 
-- Hover over the notch (including the thin black edge below it) for 0.25 seconds
+- Hover over the notch (including the thin black edge below it) for 0.05 seconds
   to expand. Leaving collapses it after 0.3 seconds.
 - Expansion follows the pointer only. The island remains expanded while hovered
   and collapses after leaving, including after using playback controls.
