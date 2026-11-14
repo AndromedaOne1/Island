@@ -126,7 +126,8 @@ private struct ExpandedPlaybackView: View {
                     IslandProgressBar(value: snapshot.progress(at: context.date),
                                       position: Self.time(snapshot.position(at: context.date)),
                                       duration: snapshot.duration.map { Self.time($0) } ?? "Live / unknown duration",
-                                      tint: module.palette.color, isPlaying: snapshot.isPlaying)
+                                      tint: module.palette.color, isPlaying: snapshot.isPlaying,
+                                      message: coordinator.commandError)
                 }.allowsHitTesting(false)
 
                 IslandTransportControls(isPlaying: snapshot.isPlaying, isBusy: coordinator.isCommandInFlight,
@@ -134,14 +135,6 @@ private struct ExpandedPlaybackView: View {
                                         previous: { coordinator.send(.previous) },
                                         toggle: { coordinator.send(.togglePlayPause) },
                                         next: { coordinator.send(.next) })
-            }
-            .overlay(alignment: .bottom) {
-                if let error = coordinator.commandError {
-                    Text(error).font(IslandDesign.Typography.Role.caption.font)
-                        .foregroundStyle(IslandDesign.Colors.warning).lineLimit(1).help(error)
-                        .offset(y: IslandDesign.Typography.Role.caption.lineHeight + IslandDesign.Spacing.tight)
-                        .transition(.islandContent(reduceMotion: reduceMotion))
-                }
             }
             .background {
                 RadialGradient(colors: [module.palette.color.opacity(IslandDesign.Artwork.backdropOpacity), .clear],

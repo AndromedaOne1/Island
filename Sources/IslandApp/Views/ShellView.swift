@@ -86,6 +86,8 @@ struct ShellView: View {
                 .frame(width: layout.panelFrame.width, height: layout.panelFrame.height, alignment: .top)
                 .animation(IslandDesign.Motion.shell(reduceMotion: reduceMotion),
                            value: interaction.presentation)
+                .animation(IslandDesign.Motion.shell(reduceMotion: reduceMotion),
+                           value: registry.activeModules.count)
                 .onPreferenceChange(SurfaceMetricsKey.self) { metrics in
                     Task { @MainActor in panel.updateSurfaceMetrics(metrics) }
                 }
@@ -150,6 +152,7 @@ struct ShellView: View {
                     }
                     .buttonStyle(IslandButtonStyle(.quiet))
                     .frame(height: IslandDesign.Modules.navigationHeight)
+                    .transition(.opacity)
                     .accessibilityAction(named: "Next module") { registry.cycle(by: 1) }
                     .accessibilityAction(named: "Previous module") { registry.cycle(by: -1) }
                 }

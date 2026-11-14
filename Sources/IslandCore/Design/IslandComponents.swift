@@ -203,10 +203,12 @@ public struct IslandProgressBar: View {
     let duration: String
     let tint: Color
     let isPlaying: Bool
+    let message: String?
     @Environment(\.islandFeedback) private var feedback
     @Environment(\.islandReduceMotion) private var reduceMotion
-    public init(value: Double?, position: String, duration: String, tint: Color, isPlaying: Bool) {
+    public init(value: Double?, position: String, duration: String, tint: Color, isPlaying: Bool, message: String? = nil) {
         self.value = value; self.position = position; self.duration = duration; self.tint = tint; self.isPlaying = isPlaying
+        self.message = message
     }
     public var body: some View {
         VStack(spacing: IslandDesign.Spacing.small) {
@@ -218,11 +220,19 @@ public struct IslandProgressBar: View {
                         .animation(reduceMotion || !isPlaying ? nil : .linear(duration: IslandDesign.Motion.progressInterval), value: value)
                 }
             }.frame(height: IslandDesign.Progress.height)
-            HStack {
-                Text(position)
-                Spacer()
-                Text(duration)
-            }.font(IslandDesign.Typography.time).foregroundStyle(IslandDesign.Colors.secondary)
+            Group {
+                if let message {
+                    Text(message).font(IslandDesign.Typography.Role.caption.font)
+                        .foregroundStyle(IslandDesign.Colors.warning).lineLimit(1).help(message)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    HStack {
+                        Text(position)
+                        Spacer()
+                        Text(duration)
+                    }.font(IslandDesign.Typography.time).foregroundStyle(IslandDesign.Colors.secondary)
+                }
+            }.frame(height: IslandDesign.Typography.Role.caption.lineHeight)
         }
         .opacity(feedback.isPressed ? IslandDesign.Colors.pressedOpacity : 1)
         .scaleEffect(feedback.isPressed && !reduceMotion ? IslandDesign.Motion.surfacePressedScale : 1, anchor: .leading)
@@ -230,7 +240,7 @@ public struct IslandProgressBar: View {
         .animation(IslandDesign.Motion.press(reduceMotion: reduceMotion), value: feedback.isPressed)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Playback progress")
-        .accessibilityValue("\(position) of \(duration)")
+        .accessibilityValue(message ?? "\(position) of \(duration)")
     }
 }
 
