@@ -9,6 +9,8 @@ private struct SurfaceMetricsKey: PreferenceKey {
 private struct AnimatedSurface<Content: View>: View, Animatable {
     nonisolated var metrics: SurfaceMetrics
     let topBleed: CGFloat
+    let notchDepth: CGFloat
+    let notchWidth: CGFloat
     @ViewBuilder let content: () -> Content
 
     nonisolated var animatableData: AnimatablePair<AnimatablePair<CGFloat, CGFloat>, AnimatablePair<CGFloat, CGFloat>> {
@@ -24,11 +26,35 @@ private struct AnimatedSurface<Content: View>: View, Animatable {
 
     var body: some View {
         let shape = IslandShape(topRadius: metrics.topRadius, bottomRadius: metrics.bottomRadius)
-        shape.fill(IslandDesign.Colors.background)
+        let height = max(IslandDesign.Spacing.hairline, metrics.height + topBleed)
+        ZStack(alignment: .top) {
+            IslandGlassBackground()
+            if notchDepth > 0 {
+                // A solid cap avoids gradient dithering over the physical camera.
+                IslandDesign.Colors.background
+                    .frame(height: notchDepth + topBleed)
+                    .overlay(alignment: .bottom) {
+                        LinearGradient(colors: [IslandDesign.Colors.background, .clear],
+                                       startPoint: .top, endPoint: .bottom)
+                            .frame(height: IslandDesign.Glass.notchFadeHeight)
+                            .offset(y: IslandDesign.Glass.notchFadeHeight)
+                    }
+                    .allowsHitTesting(false)
+            }
+        }
             .overlay(alignment: .top) { content().padding(.top, topBleed) }
+            .overlay(alignment: .top) {
+                if notchWidth > 0 {
+                    // Module glows and transitions must never paint over the camera.
+                    IslandDesign.Colors.background
+                        .frame(width: notchWidth, height: notchDepth + topBleed)
+                        .allowsHitTesting(false)
+                }
+            }
             .frame(width: max(IslandDesign.Spacing.hairline, metrics.width),
-                   height: max(IslandDesign.Spacing.hairline, metrics.height + topBleed))
+                   height: height)
             .clipShape(shape)
+            .contentShape(shape)
             .islandSurfaceFeedback()
             .preference(key: SurfaceMetricsKey.self, value: metrics)
     }
@@ -45,7 +71,9 @@ struct ShellView: View {
         Group {
             if let layout = panel.layout {
                 AnimatedSurface(metrics: layout.metrics(for: interaction.presentation),
-                                topBleed: layout.mode == .notch ? IslandDesign.Layout.notchTopBleed : 0) {
+                                topBleed: layout.mode == .notch ? IslandDesign.Layout.notchTopBleed : 0,
+                                notchDepth: layout.notchRect?.height ?? 0,
+                                notchWidth: layout.notchRect?.width ?? 0) {
                     ZStack(alignment: .top) {
                         surfaceContent(layout)
                             .id(interaction.presentation)
@@ -92,8 +120,8 @@ struct ShellView: View {
                 }
             }
             .padding(.horizontal, IslandDesign.Spacing.content)
-            .padding(.top, (layout.notchRect?.height ?? IslandDesign.Layout.pillContentTop) + IslandDesign.Spacing.medium)
-            .padding(.bottom, IslandDesign.Spacing.medium)
+            .padding(.top, (layout.notchRect?.height ?? IslandDesign.Layout.pillContentTop) + IslandDesign.Spacing.regular)
+            .padding(.bottom, IslandDesign.Spacing.regular)
             .frame(width: layout.expanded.width, alignment: .top)
             .overlay(alignment: .top) {
                 HStack(spacing: 0) {

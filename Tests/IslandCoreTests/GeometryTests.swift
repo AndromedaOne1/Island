@@ -19,8 +19,8 @@ func notchUsesGlobalScreenCoordinates(origin: CGPoint) {
     #expect(layout.centerX == screen.frame.midX)
     #expect(layout.panelFrame.maxY == screen.frame.maxY + IslandDesign.Layout.notchTopBleed)
     #expect(layout.surfaceRect(for: layout.collapsed).maxY == screen.frame.maxY)
-    #expect(layout.collapsed.width == 198)
-    #expect(layout.collapsed.height == 36)
+    #expect(layout.collapsed.width == 194)
+    #expect(layout.collapsed.height == 34)
     #expect(layout.expanded.width > layout.compact.width)
     #expect(layout.panelFrame.contains(layout.surfaceRect(for: layout.expanded)))
 }

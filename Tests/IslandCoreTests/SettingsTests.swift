@@ -9,7 +9,7 @@ import Testing
     defaults.set(-10.0, forKey: "island.hoverDelay")
     let settings = ShellSettings(defaults: defaults)
     #expect(settings.isVisible)
-    #expect(settings.hoverDelay == 0.05)
+    #expect(settings.hoverDelay == 0.02)
     settings.isVisible = false
     settings.selectedDisplayID = "external"
     settings.hoverDelay = 0.4

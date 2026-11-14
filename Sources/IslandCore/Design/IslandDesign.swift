@@ -27,24 +27,24 @@ public enum IslandDesign {
         public static let regular: CGFloat = 12
         public static let medium: CGFloat = 16
         public static let large: CGFloat = 20
-        public static let content: CGFloat = 24
+        public static let content: CGFloat = 20
         public static let wide: CGFloat = 32
     }
 
     public enum Layout {
-        public static let notchWidthPadding: CGFloat = 12
-        public static let notchBottomOverlap: CGFloat = 4
+        public static let notchWidthPadding: CGFloat = 8
+        public static let notchBottomOverlap: CGFloat = 2
         public static let notchTopBleed: CGFloat = 1
-        public static let compactExtraWidth: CGFloat = 144
-        public static let compactExtraHeight: CGFloat = 4
-        public static let expandedWidth: CGFloat = 420
-        public static let expandedBodyHeight: CGFloat = 224
-        public static let collapsedTopRadius: CGFloat = 6
-        public static let collapsedBottomRadius: CGFloat = 14
-        public static let compactTopRadius: CGFloat = 8
-        public static let compactBottomRadius: CGFloat = 20
+        public static let compactExtraWidth: CGFloat = 112
+        public static let compactExtraHeight: CGFloat = 2
+        public static let expandedWidth: CGFloat = 384
+        public static let expandedBodyHeight: CGFloat = 200
+        public static let collapsedTopRadius: CGFloat = 4
+        public static let collapsedBottomRadius: CGFloat = 10
+        public static let compactTopRadius: CGFloat = 6
+        public static let compactBottomRadius: CGFloat = 16
         public static let expandedTopRadius: CGFloat = 10
-        public static let expandedBottomRadius: CGFloat = 38
+        public static let expandedBottomRadius: CGFloat = 34
         public static let pillWidth: CGFloat = 168
         public static let pillHeight: CGFloat = 32
         public static let pillTopOffset: CGFloat = 8
@@ -61,6 +61,11 @@ public enum IslandDesign {
         public static let maximumNotchWidth: CGFloat = 600
         public static let estimatedNotchWidth: CGFloat = 200
         public static let screenTolerance: CGFloat = 1
+    }
+
+    public enum Glass {
+        public static let tintOpacity = 0.55
+        public static let notchFadeHeight: CGFloat = 32
     }
 
     public enum Typography {
@@ -96,18 +101,18 @@ public enum IslandDesign {
     }
 
     public enum Motion {
-        public static let shellResponse = 0.46
-        public static let shellDamping = 0.86
+        public static let shellResponse = 0.32
+        public static let shellDamping = 0.88
         public static let pressResponse = 0.28
         public static let pressDamping = 0.72
         public static let hoverDuration = 0.16
-        public static let contentDuration = 0.24
+        public static let contentDuration = 0.18
         public static let reducedDuration = 0.14
-        public static let hoverDelay = 0.25
+        public static let hoverDelay = 0.05
         public static let collapseDelay = 0.3
-        public static let minimumHoverDelay = 0.05
+        public static let minimumHoverDelay = 0.02
         public static let maximumHoverDelay = 1.5
-        public static let hoverDelayStep = 0.05
+        public static let hoverDelayStep = 0.01
         public static let frameInterval = 1.0 / 30.0
         public static let progressInterval = 0.25
         public static let contentScale: CGFloat = 0.96
@@ -128,8 +133,8 @@ public enum IslandDesign {
     }
 
     public enum Artwork {
-        public static let compactSize: CGFloat = 28
-        public static let expandedSize: CGFloat = 76
+        public static let compactSize: CGFloat = 24
+        public static let expandedSize: CGFloat = 64
         public static let cornerRatio: CGFloat = 0.22
         public static let placeholderSymbolRatio: CGFloat = 0.40
         public static let shadowRadius: CGFloat = 12
@@ -150,8 +155,8 @@ public enum IslandDesign {
 
     public enum Control {
         public static let padding: CGFloat = 10
-        public static let transportSize: CGFloat = 44
-        public static let primarySize: CGFloat = 52
+        public static let transportSize: CGFloat = 40
+        public static let primarySize: CGFloat = 48
         public static let transportSymbol: CGFloat = 18
         public static let primarySymbol: CGFloat = 22
         public static let placeholderSymbol: CGFloat = 28
@@ -174,11 +179,11 @@ public enum IslandDesign {
 
     public enum Indicator {
         public static let bars = 4
-        public static let width: CGFloat = 28
-        public static let height: CGFloat = 24
-        public static let barWidth: CGFloat = 3
-        public static let restingHeight: CGFloat = 5
-        public static let amplitude: CGFloat = 14
+        public static let width: CGFloat = 24
+        public static let height: CGFloat = 20
+        public static let barWidth: CGFloat = 2.5
+        public static let restingHeight: CGFloat = 4
+        public static let amplitude: CGFloat = 12
         public static let frequency = 5.0
         public static let phaseOffset = 1.3
     }
